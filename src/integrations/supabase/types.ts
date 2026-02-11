@@ -558,6 +558,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approval_status: string
           avatar_url: string | null
           created_at: string
           email: string
@@ -568,6 +569,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approval_status?: string
           avatar_url?: string | null
           created_at?: string
           email?: string
@@ -578,6 +580,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approval_status?: string
           avatar_url?: string | null
           created_at?: string
           email?: string
@@ -794,6 +797,10 @@ export type Database = {
         }
         Returns: string
       }
+      admin_approve_user: {
+        Args: { _action: string; _reason?: string; _user_id: string }
+        Returns: undefined
+      }
       admin_assign_recruiter: {
         Args: {
           _candidate_id: string
@@ -816,6 +823,17 @@ export type Database = {
           _start_date: string
         }
         Returns: string
+      }
+      admin_get_pending_approvals: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          phone: string
+          roles: Database["public"]["Enums"]["app_role"][]
+          user_id: string
+        }[]
       }
       admin_record_payment: {
         Args: {

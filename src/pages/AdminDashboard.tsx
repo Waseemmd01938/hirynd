@@ -9,6 +9,7 @@ import AdminReferralsPage from "@/pages/admin/AdminReferralsPage";
 import AdminConfigPage from "@/pages/admin/AdminConfigPage";
 import AdminReportsPage from "@/pages/admin/AdminReportsPage";
 import AdminGlobalAuditTab from "@/components/admin/AdminGlobalAuditTab";
+import AdminApprovalsPage from "@/pages/admin/AdminApprovalsPage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { label: "Operations", path: "/admin-dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+  { label: "Approvals", path: "/admin-dashboard/approvals", icon: <Shield className="h-4 w-4" /> },
   { label: "Candidates", path: "/admin-dashboard/candidates", icon: <Users className="h-4 w-4" /> },
   { label: "Recruiters", path: "/admin-dashboard/recruiters", icon: <UserPlus className="h-4 w-4" /> },
   { label: "Referrals", path: "/admin-dashboard/referrals", icon: <Users className="h-4 w-4" /> },
@@ -80,6 +82,7 @@ const AdminDashboard = () => {
     const candidateId = subPath.replace("candidates/", "");
     return <AdminCandidateDetail candidateId={candidateId} />;
   }
+  if (subPath === "approvals") return <DashboardLayout title="Approvals" navItems={navItems}><AdminApprovalsPage /></DashboardLayout>;
   if (subPath === "referrals") return <DashboardLayout title="Referrals" navItems={navItems}><AdminReferralsPage /></DashboardLayout>;
   if (subPath === "config") return <DashboardLayout title="Configuration" navItems={navItems}><AdminConfigPage /></DashboardLayout>;
   if (subPath === "reports") return <DashboardLayout title="Reports & Exports" navItems={navItems}><AdminReportsPage /></DashboardLayout>;

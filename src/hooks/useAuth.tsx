@@ -9,6 +9,7 @@ interface AuthContextType {
   session: Session | null;
   roles: AppRole[];
   loading: boolean;
+  approvalStatus: string | null;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -22,6 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
 
   const fetchRoles = async (userId: string) => {
     const { data } = await supabase
@@ -31,15 +33,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setRoles((data || []).map((r: any) => r.role as AppRole));
   };
 
+  const fetchApprovalStatus = async (userId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("approval_status")
+      .eq("user_id", userId)
+      .single();
+    setApprovalStatus(data?.approval_status || "pending_approval");
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchRoles(session.user.id), 0);
+          setTimeout(() => {
+            fetchRoles(session.user.id);
+            fetchApprovalStatus(session.user.id);
+          }, 0);
         } else {
           setRoles([]);
+          setApprovalStatus(null);
         }
         setLoading(false);
       }
@@ -50,6 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchRoles(session.user.id);
+        fetchApprovalStatus(session.user.id);
       }
       setLoading(false);
     });
@@ -67,7 +83,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
     });
     if (error) return { error };
-    // Role is auto-assigned as 'candidate' via database trigger
     return { error: null };
   };
 
@@ -79,12 +94,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     await supabase.auth.signOut();
     setRoles([]);
+    setApprovalStatus(null);
   };
 
   const hasRole = (role: AppRole) => roles.includes(role);
 
   return (
-    <AuthContext.Provider value={{ user, session, roles, loading, signUp, signIn, signOut, hasRole }}>
+    <AuthContext.Provider value={{ user, session, roles, loading, approvalStatus, signUp, signIn, signOut, hasRole }}>
       {children}
     </AuthContext.Provider>
   );

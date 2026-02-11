@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Clock, CheckCircle2, XCircle } from "lucide-react";
 
 const CandidateLogin = () => {
   const [loginEmail, setLoginEmail] = useState("");
@@ -16,19 +18,49 @@ const CandidateLogin = () => {
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
   const { signIn, signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const checkApproval = async (userId: string): Promise<string> => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("approval_status")
+      .eq("user_id", userId)
+      .single();
+    return data?.approval_status || "pending_approval";
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setApprovalStatus(null);
     const { error } = await signIn(loginEmail, loginPassword);
-    setSubmitting(false);
     if (error) {
+      setSubmitting(false);
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    // Check approval status
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const status = await checkApproval(user.id);
+      if (status === "approved") {
+        setSubmitting(false);
+        navigate("/candidate-dashboard");
+      } else if (status === "rejected") {
+        setSubmitting(false);
+        setApprovalStatus("rejected");
+        await supabase.auth.signOut();
+      } else {
+        setSubmitting(false);
+        setApprovalStatus("pending_approval");
+        await supabase.auth.signOut();
+      }
     } else {
-      navigate("/candidate-dashboard");
+      setSubmitting(false);
     }
   };
 
@@ -40,9 +72,84 @@ const CandidateLogin = () => {
     if (error) {
       toast({ title: "Registration failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Registration successful", description: "Please check your email to verify your account." });
+      // Send registration emails via edge function (non-blocking)
+      supabase.functions.invoke("send-transactional-email", {
+        body: { type: "registration_received", payload: { name: regName, email: regEmail } },
+      }).catch(() => {});
+      supabase.functions.invoke("send-transactional-email", {
+        body: { type: "new_registration_request", payload: { name: regName, email: regEmail, role: "candidate", created_at: new Date().toISOString() } },
+      }).catch(() => {});
+      // Sign out since they need approval
+      await supabase.auth.signOut();
+      setRegistrationComplete(true);
     }
   };
+
+  if (registrationComplete) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="flex items-center justify-center py-20">
+          <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-8 card-elevated text-center">
+            <Clock className="mx-auto mb-4 h-12 w-12 text-secondary" />
+            <h1 className="mb-2 text-2xl font-bold text-card-foreground">Registration Received!</h1>
+            <p className="text-muted-foreground">
+              Thank you for registering with HYRIND. Your account is under review. We'll get back to you within <strong>24–48 hours</strong>.
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              You'll receive an email once your account has been approved.
+            </p>
+            <Button variant="outline" className="mt-6" onClick={() => { setRegistrationComplete(false); setApprovalStatus(null); }}>
+              Back to Login
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (approvalStatus === "pending_approval") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="flex items-center justify-center py-20">
+          <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-8 card-elevated text-center">
+            <Clock className="mx-auto mb-4 h-12 w-12 text-secondary" />
+            <h1 className="mb-2 text-2xl font-bold text-card-foreground">Account Under Review</h1>
+            <p className="text-muted-foreground">
+              Your HYRIND account is still pending admin approval. We'll notify you via email once your account is approved.
+            </p>
+            <Button variant="outline" className="mt-6" onClick={() => setApprovalStatus(null)}>
+              Back to Login
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (approvalStatus === "rejected") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="flex items-center justify-center py-20">
+          <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-8 card-elevated text-center">
+            <XCircle className="mx-auto mb-4 h-12 w-12 text-destructive" />
+            <h1 className="mb-2 text-2xl font-bold text-card-foreground">Account Not Approved</h1>
+            <p className="text-muted-foreground">
+              Your HYRIND account application was not approved at this time. If you believe this was made in error, please <Link to="/contact" className="font-medium text-secondary hover:underline">contact us</Link>.
+            </p>
+            <Button variant="outline" className="mt-6" onClick={() => setApprovalStatus(null)}>
+              Back to Login
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

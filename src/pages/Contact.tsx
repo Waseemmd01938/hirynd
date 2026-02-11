@@ -36,13 +36,13 @@ const Contact = () => {
       const visaStatus = formData.get("visa_status") as string || "";
 
       // Send confirmation to user
-      supabase.functions.invoke("send-email", {
-        body: { type: "interest_confirmation", to: email, data: { name } },
+      supabase.functions.invoke("send-transactional-email", {
+        body: { type: "interest_confirmation", payload: { name, email } },
       }).catch(() => {});
 
-      // Notify admin (recipient read from admin_config by edge function)
-      supabase.functions.invoke("send-email", {
-        body: { type: "admin_notification", to: "admin", data: { name, email, phone, university, visa_status: visaStatus, referral_source: referralSource } },
+      // Notify admin
+      supabase.functions.invoke("send-transactional-email", {
+        body: { type: "interest_admin_notification", payload: { name, email, phone, university, visa_status: visaStatus, referral_source: referralSource } },
       }).catch(() => {});
     }
 
