@@ -13,10 +13,10 @@ const Footer = () => {
               Recruiter-led career support. We market your profile so you can focus on your growth.
             </p>
             <div className="mt-4 flex gap-3">
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="rounded-lg bg-primary-foreground/10 p-2 transition-colors hover:bg-primary-foreground/20">
+              <a href="https://instagram.com/hyrind" target="_blank" rel="noopener noreferrer" className="rounded-lg bg-primary-foreground/10 p-2 transition-colors hover:bg-primary-foreground/20">
                 <Instagram className="h-4 w-4" />
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="rounded-lg bg-primary-foreground/10 p-2 transition-colors hover:bg-primary-foreground/20">
+              <a href="https://linkedin.com/company/hyrind" target="_blank" rel="noopener noreferrer" className="rounded-lg bg-primary-foreground/10 p-2 transition-colors hover:bg-primary-foreground/20">
                 <Linkedin className="h-4 w-4" />
               </a>
               <a href="https://wa.me" target="_blank" rel="noopener noreferrer" className="rounded-lg bg-primary-foreground/10 p-2 transition-colors hover:bg-primary-foreground/20">
@@ -50,11 +50,10 @@ const Footer = () => {
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary-foreground/60">Solutions</h4>
             <ul className="space-y-2 text-sm text-primary-foreground/70">
-              <li>End-to-End Job Search Support</li>
-              <li>Resume Optimization for Every Submission</li>
-              <li>Recruiter-Led Profile Marketing</li>
-              <li>Interview & Screening Preparation</li>
-              <li>Secure Candidate Data Handling</li>
+              <li>End-to-End Job Process Support</li>
+              <li>Resume Optimization & Applications</li>
+              <li>Candidate Management & Tracking</li>
+              <li>Secure Data Handling</li>
             </ul>
           </div>
 
@@ -62,7 +61,7 @@ const Footer = () => {
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary-foreground/60">Scan & Connect</h4>
             <p className="mb-3 text-sm text-primary-foreground/70">
-              Connect with us on social media for updates and tips.
+              Connect with us on social media for updates, tips, and career resources.
             </p>
             <Link to="/scan-connect" className="text-sm font-medium text-secondary underline-offset-4 hover:underline">
               Visit our social hub →
@@ -76,7 +75,7 @@ const Footer = () => {
           </p>
           <div className="flex gap-4 text-xs text-primary-foreground/50">
             <Link to="/privacy-policy" className="hover:text-primary-foreground/70">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-primary-foreground/70">Terms of Service</Link>
+            <Link to="/terms" className="hover:text-primary-foreground/70">Terms & Conditions</Link>
           </div>
         </div>
       </div>

@@ -7,32 +7,32 @@ const testimonials = [
   {
     name: "Priya M.",
     role: "Software Engineer",
-    text: "HYRIND completely changed my job search experience. My recruiter optimized my resume for every application and I had full visibility into where my profile was being submitted. I landed a role within 6 weeks.",
+    text: "HYRIND completely changed my job search experience. My recruiter optimized my resume for every application and I had full visibility into where my profile was being submitted. The daily submission logs in my portal kept me informed at every step. I landed a role within 6 weeks.",
   },
   {
     name: "Ahmed R.",
     role: "Data Analyst",
-    text: "The screening call practice was a game-changer. I used to freeze during recruiter calls, but after multiple practice sessions with my HYRIND team, I felt confident and prepared for every conversation.",
+    text: "The screening call practice was a game-changer. I used to freeze during recruiter calls, but after multiple mock sessions and detailed feedback from my HYRIND team, I felt confident and prepared for every conversation. The STAR method coaching made a real difference.",
   },
   {
     name: "Jessica L.",
     role: "Business Analyst",
-    text: "What I appreciated most was the transparency. I could see daily how many applications were submitted, which companies, and the status of each. No other service gave me that level of visibility.",
+    text: "What I appreciated most was the transparency. I could see daily how many applications were submitted, which companies, and the status of each. No other service gave me that level of visibility. My recruiter treated my job search like their own priority.",
   },
   {
     name: "Ravi K.",
     role: "Full Stack Developer",
-    text: "As an international student, I was overwhelmed by the US job market. HYRIND's team guided me through everything — resume format, interview prep, and role-specific training. Highly recommend.",
+    text: "As an international student on OPT, I was overwhelmed by the US job market. HYRIND's team guided me through everything — resume format, interview prep, role-specific training, and screening call practice. They understood the visa complexities and tailored their approach accordingly. Highly recommend.",
   },
   {
     name: "Sarah T.",
     role: "Product Manager",
-    text: "The dedicated recruiter model is what sets HYRIND apart. My recruiter knew my goals, my strengths, and marketed me accordingly. It felt like having a career partner, not just a service.",
+    text: "The dedicated recruiter model is what sets HYRIND apart. My recruiter knew my goals, my strengths, and marketed me accordingly. It felt like having a career partner, not just a service. The weekly check-ins and strategy adjustments were invaluable.",
   },
   {
     name: "Michael C.",
     role: "QA Engineer",
-    text: "I was skeptical at first, but the results spoke for themselves. Within the first month, I had multiple screening calls and two interviews lined up. The daily submission logs kept me informed at every step.",
+    text: "I was skeptical at first, but the results spoke for themselves. Within the first month, I had multiple screening calls and two interviews lined up. The daily submission logs, interview coaching, and recruiter outreach to hiring managers made all the difference in my career outcome.",
   },
 ];
 
@@ -46,7 +46,7 @@ const Reviews = () => {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-3xl text-center">
               <h1 className="text-4xl font-bold text-primary-foreground sm:text-5xl">What Our Candidates Say</h1>
               <p className="mt-6 text-lg text-primary-foreground/70">
-                Real feedback from job seekers who trusted HYRIND with their career journey.
+                Real feedback from job seekers who trusted HYRIND with their career journey. Our candidates value the transparency, recruiter support, and real results.
               </p>
             </motion.div>
           </div>
