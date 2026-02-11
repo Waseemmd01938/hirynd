@@ -4,6 +4,7 @@ import HeroSection from "@/components/home/HeroSection";
 import WhyTrustSection from "@/components/home/WhyTrustSection";
 import ServicesOverview from "@/components/home/ServicesOverview";
 import WorkflowSection from "@/components/home/WorkflowSection";
+import ClosingCTA from "@/components/home/ClosingCTA";
 
 const Index = () => {
   return (
@@ -14,6 +15,7 @@ const Index = () => {
         <WhyTrustSection />
         <ServicesOverview />
         <WorkflowSection />
+        <ClosingCTA />
       </main>
       <Footer />
     </div>

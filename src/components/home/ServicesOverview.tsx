@@ -7,21 +7,21 @@ const services = [
     icon: Megaphone,
     title: "Profile Marketing",
     description:
-      "Resume optimization for every application. Role-based submissions with CRM tracking and full transparency into your job search progress.",
+      "Targeted applications submitted by your dedicated recruiter. Resume optimization per job posting, LinkedIn optimization, recruiter-driven submissions to hiring managers, and full progress tracking with CRM-based transparency into every application.",
     link: "/services/profile-marketing",
   },
   {
     icon: Mic,
-    title: "Interview & Screening Call Practice",
+    title: "Interview & Screening Call Training",
     description:
-      "Mock interviews, screening call coaching, and real-time feedback to help you make a confident impression with every employer.",
+      "Mock interviews, voice and communication improvement, STAR method coaching, and detailed actionable feedback. Build confidence and sharpen your delivery for every screening call and interview round.",
     link: "/services/interview-training",
   },
   {
     icon: BookOpen,
-    title: "Skills Training",
+    title: "Skills Training Program",
     description:
-      "Role-specific training plans, progress tracking, and guided learning paths to bridge skill gaps and align with market demand.",
+      "Role-based skill roadmaps with curated learning resources, trainer guidance, real-world project exposure, and measurable progress tracking. Bridge skill gaps and align with market demand.",
     link: "/services/skills-training",
   },
 ];
@@ -32,7 +32,7 @@ const ServicesOverview = () => {
       <div className="container">
         <div className="mx-auto mb-14 max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Our Career Services
+            What We Offer
           </h2>
           <p className="mt-4 text-muted-foreground">
             Comprehensive, recruiter-led solutions designed to accelerate your career journey.

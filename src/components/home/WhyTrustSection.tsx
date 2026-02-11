@@ -6,19 +6,19 @@ const cards = [
     icon: UserCheck,
     title: "Dedicated Recruiter Assigned to You",
     description:
-      "Get a personal recruiter who understands your goals, markets your profile to targeted employers, and keeps you informed every step of the way.",
+      "One or more recruiters are assigned to manage your profile full-time. They handle daily applications, optimize your resume based on job description feedback, and continuously adjust your marketing strategy to maximize results.",
   },
   {
     icon: FileText,
     title: "Role-Based Resume & Skills Roadmap",
     description:
-      "Your resume is optimized for every application. We tailor it to each role, ensuring you stand out to hiring managers and ATS systems.",
+      "Your resume is tailored to your exact target roles and industry, driven by your intake assessment. We identify skills gaps and provide a personalized roadmap with resources to upskill effectively — ensuring your profile stays competitive.",
   },
   {
     icon: Headphones,
     title: "Interview & Screening Call Support",
     description:
-      "Practice mock interviews, receive feedback, and get coached on screening calls so you're fully prepared when opportunity knocks.",
+      "From mock screening calls and communication coaching to behavioral and technical interview prep — we build your confidence and guide you continuously until you're fully client-ready.",
   },
 ];
 
