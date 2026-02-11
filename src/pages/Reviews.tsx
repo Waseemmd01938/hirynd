@@ -1,4 +1,5 @@
 import Header from "@/components/layout/Header";
+import SEO from "@/components/SEO";
 import Footer from "@/components/layout/Footer";
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
@@ -39,6 +40,7 @@ const testimonials = [
 const Reviews = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Reviews" description="Hear from candidates who landed jobs through HYRIND's recruiter-led profile marketing and interview support." path="/reviews" />
       <Header />
       <main>
         <section className="hero-gradient py-20 lg:py-28">

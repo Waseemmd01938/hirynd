@@ -1,4 +1,5 @@
 import Header from "@/components/layout/Header";
+import SEO from "@/components/SEO";
 import Footer from "@/components/layout/Footer";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,7 @@ const services = [
 const Services = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Services" description="Profile marketing, interview training, and skills development — comprehensive career support to help you land full-time opportunities." path="/services" />
       <Header />
       <main>
         <section className="hero-gradient py-20 lg:py-28">
