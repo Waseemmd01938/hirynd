@@ -1,0 +1,21 @@
+-- Performance indexes for frequently filtered columns
+CREATE INDEX IF NOT EXISTS idx_candidates_status ON public.candidates (status);
+CREATE INDEX IF NOT EXISTS idx_candidates_user_id ON public.candidates (user_id);
+CREATE INDEX IF NOT EXISTS idx_candidate_assignments_candidate_id ON public.candidate_assignments (candidate_id);
+CREATE INDEX IF NOT EXISTS idx_candidate_assignments_recruiter_id ON public.candidate_assignments (recruiter_id);
+CREATE INDEX IF NOT EXISTS idx_candidate_assignments_active ON public.candidate_assignments (is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_daily_submission_logs_candidate_id ON public.daily_submission_logs (candidate_id);
+CREATE INDEX IF NOT EXISTS idx_daily_submission_logs_recruiter_id ON public.daily_submission_logs (recruiter_id);
+CREATE INDEX IF NOT EXISTS idx_daily_submission_logs_date ON public.daily_submission_logs (log_date DESC);
+CREATE INDEX IF NOT EXISTS idx_job_postings_candidate_id ON public.job_postings (candidate_id);
+CREATE INDEX IF NOT EXISTS idx_job_postings_submission_log_id ON public.job_postings (submission_log_id);
+CREATE INDEX IF NOT EXISTS idx_interview_logs_candidate_id ON public.interview_logs (candidate_id);
+CREATE INDEX IF NOT EXISTS idx_interview_logs_date ON public.interview_logs (interview_date DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id_unread ON public.notifications (user_id, is_read) WHERE is_read = false;
+CREATE INDEX IF NOT EXISTS idx_payments_candidate_id ON public.payments (candidate_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_id ON public.audit_logs (entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer_id ON public.referrals (referrer_id);
+CREATE INDEX IF NOT EXISTS idx_training_clicks_candidate_id ON public.training_clicks (candidate_id);
+CREATE INDEX IF NOT EXISTS idx_role_suggestions_candidate_id ON public.role_suggestions (candidate_id);
+CREATE INDEX IF NOT EXISTS idx_credential_intake_sheets_candidate_id ON public.credential_intake_sheets (candidate_id);

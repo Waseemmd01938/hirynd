@@ -11,6 +11,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO title="HYRIND — Focus on Skills. Let Us Handle the Rest." description="Recruiter-led profile marketing, resume optimization, daily job submissions, and interview preparation for job seekers in the U.S." path="/" />
+      <Header />
       <main>
         <HeroSection />
         <WhyTrustSection />

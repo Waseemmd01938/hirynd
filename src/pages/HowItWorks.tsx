@@ -1,4 +1,5 @@
 import Header from "@/components/layout/Header";
+import SEO from "@/components/SEO";
 import Footer from "@/components/layout/Footer";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ const HowItWorks = () => {
   stepCounter = 0;
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="How It Works" description="From interest form to placement — learn the 13-step HYRIND journey across discovery, intake, payment, marketing, and ongoing support." path="/how-it-works" />
       <Header />
       <main>
         <section className="hero-gradient py-20 lg:py-28">

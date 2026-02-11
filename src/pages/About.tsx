@@ -1,4 +1,5 @@
 import Header from "@/components/layout/Header";
+import SEO from "@/components/SEO";
 import Footer from "@/components/layout/Footer";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ const whyChoose = [
 const About = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="About Us" description="Learn about HYRIND — a recruiter-led profile marketing and job support platform empowering job seekers with tools, training, and representation." path="/about" />
       <Header />
       <main>
         {/* Hero */}
