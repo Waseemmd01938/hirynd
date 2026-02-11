@@ -1,7 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,10 +14,39 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const FROM_ADDRESS = "HYRIND <noreply@hyrind.com>";
+const REPLY_TO = "support@hyrind.com";
+
 interface EmailRequest {
   type: "interest_confirmation" | "admin_notification" | "referral_email";
   to: string;
   data: Record<string, string>;
+}
+
+async function logEmail(email_type: string, recipient_email: string, status: string, error_message?: string) {
+  try {
+    await supabase.from("email_logs").insert({
+      email_type,
+      recipient_email,
+      status,
+      error_message: error_message || null,
+    });
+  } catch (e) {
+    console.error("Failed to log email:", e);
+  }
+}
+
+async function getAdminEmails(): Promise<string[]> {
+  const { data } = await supabase
+    .from("admin_config")
+    .select("config_value")
+    .eq("config_key", "admin_notification_email")
+    .single();
+
+  if (data?.config_value) {
+    return data.config_value.split(",").map((e: string) => e.trim()).filter(Boolean);
+  }
+  return ["admin@hyrind.com"];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -32,6 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     let subject = "";
     let html = "";
+    let recipients: string[] = [to];
 
     switch (type) {
       case "interest_confirmation":
@@ -48,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
               <li>We'll assess your profile and recommend the best service plan</li>
               <li>Once approved, you'll get access to your personal candidate portal</li>
             </ol>
-            <p>In the meantime, feel free to explore our website: <a href="https://hirynd.lovable.app">hirynd.lovable.app</a></p>
+            <p>In the meantime, feel free to explore our website: <a href="https://hyrind.com">hyrind.com</a></p>
             <p>Best regards,<br/>The HYRIND Team</p>
           </div>
         `;
@@ -56,6 +91,8 @@ const handler = async (req: Request): Promise<Response> => {
 
       case "admin_notification":
         subject = `New Interest Form: ${data.name || "Unknown"}`;
+        // Override recipient with admin emails from config
+        recipients = await getAdminEmails();
         html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #1e3a5f;">New Interest Form Submission</h2>
@@ -67,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
               <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Visa Status</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${data.visa_status || "—"}</td></tr>
               <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Referral Source</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${data.referral_source || "—"}</td></tr>
             </table>
-            <p style="margin-top: 16px;"><a href="https://hirynd.lovable.app/admin-dashboard">View in Admin Dashboard</a></p>
+            <p style="margin-top: 16px;"><a href="https://hyrind.com/admin-dashboard">View in Admin Dashboard</a></p>
           </div>
         `;
         break;
@@ -87,7 +124,7 @@ const handler = async (req: Request): Promise<Response> => {
               <li>Daily job submissions on your behalf</li>
               <li>Resume optimization and interview preparation</li>
             </ul>
-            <p><a href="https://hirynd.lovable.app/contact" style="display: inline-block; padding: 12px 24px; background: #1e3a5f; color: white; text-decoration: none; border-radius: 6px;">Learn More & Get Started</a></p>
+            <p><a href="https://hyrind.com/contact" style="display: inline-block; padding: 12px 24px; background: #1e3a5f; color: white; text-decoration: none; border-radius: 6px;">Learn More & Get Started</a></p>
             <p>Best regards,<br/>The HYRIND Team</p>
           </div>
         `;
@@ -101,13 +138,15 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "HYRIND <onboarding@resend.dev>",
-      to: [to],
+      from: FROM_ADDRESS,
+      to: recipients,
       subject,
       html,
+      reply_to: REPLY_TO,
     });
 
-    console.log("Email sent:", type, to, emailResponse);
+    console.log("Email sent:", type, recipients, emailResponse);
+    await logEmail(type, recipients.join(","), "sent");
 
     return new Response(JSON.stringify({ success: true, data: emailResponse }), {
       status: 200,
@@ -115,6 +154,13 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error sending email:", error);
+
+    // Try to log the failure
+    try {
+      const body = await req.clone().json().catch(() => ({}));
+      await logEmail(body.type || "unknown", body.to || "unknown", "failed", error.message);
+    } catch (_) {}
+
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },

@@ -40,9 +40,9 @@ const Contact = () => {
         body: { type: "interest_confirmation", to: email, data: { name } },
       }).catch(() => {});
 
-      // Notify admin
+      // Notify admin (recipient read from admin_config by edge function)
       supabase.functions.invoke("send-email", {
-        body: { type: "admin_notification", to: "admin@hyrind.com", data: { name, email, phone, university, visa_status: visaStatus, referral_source: referralSource } },
+        body: { type: "admin_notification", to: "admin", data: { name, email, phone, university, visa_status: visaStatus, referral_source: referralSource } },
       }).catch(() => {});
     }
 

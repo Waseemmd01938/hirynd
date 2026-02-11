@@ -16,6 +16,7 @@ const AdminConfigPage = () => {
   const [saving, setSaving] = useState(false);
 
   const CONFIG_KEYS = [
+    { key: "admin_notification_email", label: "Admin Notification Email(s) (comma-separated)" },
     { key: "cal_screening_practice", label: "Screening Practice Cal.com URL" },
     { key: "cal_interview_training", label: "Interview Training Cal.com URL" },
     { key: "cal_operations_call", label: "Operations Call Cal.com URL" },
