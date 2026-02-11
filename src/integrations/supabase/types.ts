@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_config: {
+        Row: {
+          config_key: string
+          config_value: string
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config_key: string
+          config_value?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_value?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -264,37 +288,49 @@ export type Database = {
           candidate_id: string
           company_name: string | null
           created_at: string
+          difficult_questions: string | null
           id: string
           interview_date: string | null
           log_type: string
           notes: string | null
           outcome: string | null
           role_title: string | null
+          round: string | null
           submitted_by: string
+          support_needed: boolean | null
+          support_notes: string | null
         }
         Insert: {
           candidate_id: string
           company_name?: string | null
           created_at?: string
+          difficult_questions?: string | null
           id?: string
           interview_date?: string | null
           log_type: string
           notes?: string | null
           outcome?: string | null
           role_title?: string | null
+          round?: string | null
           submitted_by: string
+          support_needed?: boolean | null
+          support_notes?: string | null
         }
         Update: {
           candidate_id?: string
           company_name?: string | null
           created_at?: string
+          difficult_questions?: string | null
           id?: string
           interview_date?: string | null
           log_type?: string
           notes?: string | null
           outcome?: string | null
           role_title?: string | null
+          round?: string | null
           submitted_by?: string
+          support_needed?: boolean | null
+          support_notes?: string | null
         }
         Relationships: [
           {
@@ -590,6 +626,8 @@ export type Database = {
           friend_name: string
           friend_phone: string | null
           id: string
+          notes: string | null
+          referral_note: string | null
           referrer_id: string
           status: string
         }
@@ -599,6 +637,8 @@ export type Database = {
           friend_name: string
           friend_phone?: string | null
           id?: string
+          notes?: string | null
+          referral_note?: string | null
           referrer_id: string
           status?: string
         }
@@ -608,6 +648,8 @@ export type Database = {
           friend_name?: string
           friend_phone?: string | null
           id?: string
+          notes?: string | null
+          referral_note?: string | null
           referrer_id?: string
           status?: string
         }
@@ -655,6 +697,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "role_suggestions_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_clicks: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          id: string
+          training_type: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          id?: string
+          training_type: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          id?: string
+          training_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_clicks_candidate_id_fkey"
             columns: ["candidate_id"]
             isOneToOne: false
             referencedRelation: "candidates"

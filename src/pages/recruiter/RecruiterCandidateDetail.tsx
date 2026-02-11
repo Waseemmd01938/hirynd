@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Users, FileText, Briefcase, KeyRound, ClipboardList, Plus, Trash2, User } from "lucide-react";
+import { Users, FileText, Briefcase, KeyRound, ClipboardList, Plus, Trash2, User, Phone } from "lucide-react";
+import RecruiterInterviewsTab from "@/components/recruiter/RecruiterInterviewsTab";
 
 const navItems = [
   { label: "My Candidates", path: "/recruiter-dashboard", icon: <Users className="h-4 w-4" /> },
@@ -183,6 +184,7 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
           <TabsTrigger value="credentials">Credentials</TabsTrigger>
           <TabsTrigger value="daily-log">Daily Log</TabsTrigger>
           <TabsTrigger value="applications">Applications</TabsTrigger>
+          <TabsTrigger value="interviews">Interviews</TabsTrigger>
         </TabsList>
 
         {/* Overview */}
@@ -409,6 +411,11 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Interviews */}
+        <TabsContent value="interviews">
+          <RecruiterInterviewsTab candidateId={candidateId} candidateUserId={candidate.user_id} />
         </TabsContent>
       </Tabs>
     </DashboardLayout>

@@ -5,11 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import AdminCandidateDetail from "@/pages/admin/AdminCandidateDetail";
+import AdminReferralsPage from "@/pages/admin/AdminReferralsPage";
+import AdminConfigPage from "@/pages/admin/AdminConfigPage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LayoutDashboard, Users, ClipboardList, Shield, FileText, DollarSign, UserPlus, Activity, Eye, Bell } from "lucide-react";
+import { LayoutDashboard, Users, ClipboardList, Shield, FileText, DollarSign, UserPlus, Activity, Eye, Bell, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
@@ -19,6 +21,7 @@ const navItems = [
   { label: "Referrals", path: "/admin-dashboard/referrals", icon: <Users className="h-4 w-4" /> },
   { label: "Payments", path: "/admin-dashboard/payments", icon: <DollarSign className="h-4 w-4" /> },
   { label: "Audit Logs", path: "/admin-dashboard/audit", icon: <Shield className="h-4 w-4" /> },
+  { label: "Configuration", path: "/admin-dashboard/config", icon: <Settings className="h-4 w-4" /> },
 ];
 
 const STATUSES = [
@@ -100,6 +103,22 @@ const AdminDashboard = () => {
   if (subPath.startsWith("candidates/")) {
     const candidateId = subPath.replace("candidates/", "");
     return <AdminCandidateDetail candidateId={candidateId} />;
+  }
+
+  if (subPath === "referrals") {
+    return (
+      <DashboardLayout title="Referrals" navItems={navItems}>
+        <AdminReferralsPage />
+      </DashboardLayout>
+    );
+  }
+
+  if (subPath === "config") {
+    return (
+      <DashboardLayout title="Configuration" navItems={navItems}>
+        <AdminConfigPage />
+      </DashboardLayout>
+    );
   }
 
   const pipelineWidgets = [
