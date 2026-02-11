@@ -14,7 +14,7 @@ import CandidateInterviewsPage from "@/pages/candidate/CandidateInterviewsPage";
 import CandidateReferralsPage from "@/pages/candidate/CandidateReferralsPage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, Briefcase, Users, Calendar, UserPlus, ClipboardList, Bell, DollarSign, KeyRound, Phone } from "lucide-react";
+import { LayoutDashboard, FileText, Briefcase, Users, Calendar, UserPlus, ClipboardList, Bell, DollarSign, KeyRound, Phone, Award } from "lucide-react";
 
 const navItems = [
   { label: "Overview", path: "/candidate-dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
@@ -153,7 +153,9 @@ const CandidateDashboard = () => {
       case "paid": return "Submit your credential intake sheet.";
       case "credential_completed": return team.length === 0 ? "Your credentials are submitted. Waiting for recruiter assignment." : "Your profile is being assigned to a recruiter.";
       case "active_marketing": return "Your profile is being actively marketed!";
-      case "placed": return "Congratulations! You've been placed.";
+      case "placed": return "🎉 Congratulations! You've been placed.";
+      case "paused": return "Your case is currently paused. Contact support for details.";
+      case "cancelled": return "Your case has been cancelled. Contact support for details.";
       default: return "Contact support for assistance.";
     }
   };
@@ -167,7 +169,27 @@ const CandidateDashboard = () => {
     <DashboardLayout title="Candidate Dashboard" navItems={navItems}>
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2 space-y-6">
-          {/* Notifications */}
+          {/* Placed Banner */}
+          {status === "placed" && (
+            <Card className="border-secondary/50 bg-secondary/5">
+              <CardContent className="p-4 flex items-center gap-3">
+                <Award className="h-6 w-6 text-secondary" />
+                <div>
+                  <p className="font-semibold text-card-foreground">Case Closed — You've Been Placed! 🎉</p>
+                  <p className="text-sm text-muted-foreground">Your placement is complete. Thank you for trusting us.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Paused/Cancelled Banner */}
+          {["paused", "cancelled"].includes(status) && (
+            <Card className="border-destructive/30 bg-destructive/5">
+              <CardContent className="p-4">
+                <p className="font-semibold text-card-foreground capitalize">{status} — {getNextAction()}</p>
+              </CardContent>
+            </Card>
+          )}
           {notifications.length > 0 && (
             <Card>
               <CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5" /> Notifications</CardTitle></CardHeader>

@@ -7,11 +7,13 @@ import StatusBadge from "@/components/dashboard/StatusBadge";
 import AdminCandidateDetail from "@/pages/admin/AdminCandidateDetail";
 import AdminReferralsPage from "@/pages/admin/AdminReferralsPage";
 import AdminConfigPage from "@/pages/admin/AdminConfigPage";
+import AdminReportsPage from "@/pages/admin/AdminReportsPage";
+import AdminGlobalAuditTab from "@/components/admin/AdminGlobalAuditTab";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LayoutDashboard, Users, ClipboardList, Shield, FileText, DollarSign, UserPlus, Activity, Eye, Bell, Settings } from "lucide-react";
+import { LayoutDashboard, Users, ClipboardList, Shield, FileText, DollarSign, UserPlus, Activity, Eye, Bell, Settings, BarChart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
@@ -21,6 +23,7 @@ const navItems = [
   { label: "Referrals", path: "/admin-dashboard/referrals", icon: <Users className="h-4 w-4" /> },
   { label: "Payments", path: "/admin-dashboard/payments", icon: <DollarSign className="h-4 w-4" /> },
   { label: "Audit Logs", path: "/admin-dashboard/audit", icon: <Shield className="h-4 w-4" /> },
+  { label: "Reports", path: "/admin-dashboard/reports", icon: <BarChart className="h-4 w-4" /> },
   { label: "Configuration", path: "/admin-dashboard/config", icon: <Settings className="h-4 w-4" /> },
 ];
 
@@ -43,52 +46,27 @@ const AdminDashboard = () => {
     const { data: cands } = await supabase.from("candidates").select("*");
     if (cands) {
       const userIds = cands.map((c: any) => c.user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, email")
-        .in("user_id", userIds);
-      const merged = cands.map((c: any) => ({
-        ...c,
-        profile: profiles?.find((p: any) => p.user_id === c.user_id),
-      }));
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, email").in("user_id", userIds);
+      const merged = cands.map((c: any) => ({ ...c, profile: profiles?.find((p: any) => p.user_id === c.user_id) }));
       setCandidates(merged);
-
       const counts: Record<string, number> = {};
       STATUSES.forEach((s) => { counts[s] = 0; });
       cands.forEach((c: any) => { counts[c.status] = (counts[c.status] || 0) + 1; });
       setPipelineCounts(counts);
     }
-
-    // Fetch admin notifications
     if (user) {
-      const { data: notifs } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("is_read", false)
-        .order("created_at", { ascending: false })
-        .limit(10);
+      const { data: notifs } = await supabase.from("notifications").select("*").eq("user_id", user.id).eq("is_read", false).order("created_at", { ascending: false }).limit(10);
       setNotifications(notifs || []);
     }
-
     setLoading(false);
   };
 
   useEffect(() => { fetchData(); }, [user]);
 
   const handleStatusChange = async (candidateId: string, newStatus: string) => {
-    const { error } = await supabase.rpc("admin_update_candidate_status", {
-      _candidate_id: candidateId,
-      _new_status: newStatus,
-      _reason: "",
-    });
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Status updated" });
-      fetchData();
-    }
+    const { error } = await supabase.rpc("admin_update_candidate_status", { _candidate_id: candidateId, _new_status: newStatus, _reason: "" });
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: "Status updated" }); fetchData(); }
   };
 
   const markNotifRead = async (id: string) => {
@@ -96,30 +74,16 @@ const AdminDashboard = () => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
-  // Sub-routing
   const subPath = location.pathname.replace("/admin-dashboard", "").replace(/^\//, "");
 
-  // Candidate detail view: /admin-dashboard/candidates/:id
   if (subPath.startsWith("candidates/")) {
     const candidateId = subPath.replace("candidates/", "");
     return <AdminCandidateDetail candidateId={candidateId} />;
   }
-
-  if (subPath === "referrals") {
-    return (
-      <DashboardLayout title="Referrals" navItems={navItems}>
-        <AdminReferralsPage />
-      </DashboardLayout>
-    );
-  }
-
-  if (subPath === "config") {
-    return (
-      <DashboardLayout title="Configuration" navItems={navItems}>
-        <AdminConfigPage />
-      </DashboardLayout>
-    );
-  }
+  if (subPath === "referrals") return <DashboardLayout title="Referrals" navItems={navItems}><AdminReferralsPage /></DashboardLayout>;
+  if (subPath === "config") return <DashboardLayout title="Configuration" navItems={navItems}><AdminConfigPage /></DashboardLayout>;
+  if (subPath === "reports") return <DashboardLayout title="Reports & Exports" navItems={navItems}><AdminReportsPage /></DashboardLayout>;
+  if (subPath === "audit") return <DashboardLayout title="Audit Logs" navItems={navItems}><AdminGlobalAuditTab /></DashboardLayout>;
 
   const pipelineWidgets = [
     { key: "lead", label: "New Leads", icon: <Activity className="h-4 w-4" /> },
@@ -134,7 +98,6 @@ const AdminDashboard = () => {
 
   return (
     <DashboardLayout title="Admin Operations" navItems={navItems}>
-      {/* Notifications */}
       {notifications.length > 0 && (
         <Card className="mb-6">
           <CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5" /> Notifications ({notifications.length})</CardTitle></CardHeader>
@@ -155,14 +118,11 @@ const AdminDashboard = () => {
         </Card>
       )}
 
-      {/* Pipeline Widgets */}
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {pipelineWidgets.map((w) => (
           <Card key={w.key}>
             <CardContent className="flex items-center gap-4 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary/10">
-                {w.icon}
-              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary/10">{w.icon}</div>
               <div>
                 <p className="text-2xl font-bold text-card-foreground">{pipelineCounts[w.key] || 0}</p>
                 <p className="text-sm text-muted-foreground">{w.label}</p>
@@ -172,15 +132,10 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      {/* Candidate Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>All Candidates</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>All Candidates</CardTitle></CardHeader>
         <CardContent>
-          {loading ? (
-            <p className="text-muted-foreground">Loading...</p>
-          ) : (
+          {loading ? <p className="text-muted-foreground">Loading...</p> : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -201,9 +156,7 @@ const AdminDashboard = () => {
                       <Select value={c.status} onValueChange={(val) => handleStatusChange(c.id, val)}>
                         <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          {STATUSES.map((s) => (
-                            <SelectItem key={s} value={s}>{s.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</SelectItem>
-                          ))}
+                          {STATUSES.map((s) => <SelectItem key={s} value={s}>{s.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </TableCell>

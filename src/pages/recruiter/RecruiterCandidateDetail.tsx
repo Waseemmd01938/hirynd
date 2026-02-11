@@ -13,8 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Users, FileText, Briefcase, KeyRound, ClipboardList, Plus, Trash2, User, Phone } from "lucide-react";
+import { Users, FileText, Briefcase, KeyRound, ClipboardList, Plus, Trash2, User, Phone, Shield, Award } from "lucide-react";
 import RecruiterInterviewsTab from "@/components/recruiter/RecruiterInterviewsTab";
+import AdminAuditTab from "@/components/admin/AdminAuditTab";
 
 const navItems = [
   { label: "My Candidates", path: "/recruiter-dashboard", icon: <Users className="h-4 w-4" /> },
@@ -176,6 +177,23 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
         <Button variant="outline" size="sm" onClick={() => window.history.back()}>← Back</Button>
       </div>
 
+      {/* Placed / Paused / Cancelled Banners */}
+      {candidate.status === "placed" && (
+        <Card className="mb-4 border-secondary/50 bg-secondary/5">
+          <CardContent className="p-4 flex items-center gap-3">
+            <Award className="h-6 w-6 text-secondary" />
+            <p className="font-semibold text-card-foreground">Case Closed — Candidate Placed. Daily logs are locked.</p>
+          </CardContent>
+        </Card>
+      )}
+      {["paused", "cancelled"].includes(candidate.status) && (
+        <Card className="mb-4 border-destructive/30 bg-destructive/5">
+          <CardContent className="p-4">
+            <p className="font-semibold text-card-foreground capitalize">{candidate.status} — Daily logs are disabled.</p>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="overview">
         <TabsList className="flex-wrap">
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -185,6 +203,7 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
           <TabsTrigger value="daily-log">Daily Log</TabsTrigger>
           <TabsTrigger value="applications">Applications</TabsTrigger>
           <TabsTrigger value="interviews">Interviews</TabsTrigger>
+          <TabsTrigger value="audit">Audit</TabsTrigger>
         </TabsList>
 
         {/* Overview */}
@@ -298,6 +317,10 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
 
         {/* Daily Log */}
         <TabsContent value="daily-log" className="space-y-4">
+          {["placed", "paused", "cancelled"].includes(candidate.status) ? (
+            <Card><CardContent className="p-6"><p className="text-muted-foreground">Daily logs are disabled for {candidate.status} candidates.</p></CardContent></Card>
+          ) : (
+          <>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><ClipboardList className="h-5 w-5" /> Submit Daily Log</CardTitle>
@@ -380,6 +403,8 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
               </CardContent>
             </Card>
           )}
+          </>
+          )}
         </TabsContent>
 
         {/* Applications overview */}
@@ -416,6 +441,11 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
         {/* Interviews */}
         <TabsContent value="interviews">
           <RecruiterInterviewsTab candidateId={candidateId} candidateUserId={candidate.user_id} />
+        </TabsContent>
+
+        {/* Audit */}
+        <TabsContent value="audit">
+          <AdminAuditTab candidateId={candidateId} />
         </TabsContent>
       </Tabs>
     </DashboardLayout>

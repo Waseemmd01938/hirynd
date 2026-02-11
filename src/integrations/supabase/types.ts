@@ -775,6 +775,21 @@ export type Database = {
         }
         Returns: string
       }
+      admin_close_placement: {
+        Args: {
+          _bgv_company_name?: string
+          _candidate_id: string
+          _company_name: string
+          _hr_email: string
+          _interviewer_email?: string
+          _notes?: string
+          _offer_letter_url?: string
+          _role_title: string
+          _salary: string
+          _start_date: string
+        }
+        Returns: string
+      }
       admin_record_payment: {
         Args: {
           _amount: number
