@@ -14,16 +14,681 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          new_value: Json | null
+          old_value: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          new_value?: Json | null
+          old_value?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          new_value?: Json | null
+          old_value?: Json | null
+        }
+        Relationships: []
+      }
+      candidate_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          candidate_id: string
+          id: string
+          is_active: boolean
+          recruiter_id: string
+          role_type: string
+          unassigned_at: string | null
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          candidate_id: string
+          id?: string
+          is_active?: boolean
+          recruiter_id: string
+          role_type: string
+          unassigned_at?: string | null
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          candidate_id?: string
+          id?: string
+          is_active?: boolean
+          recruiter_id?: string
+          role_type?: string
+          unassigned_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_assignments_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      candidates: {
+        Row: {
+          created_at: string
+          degree: string | null
+          drive_folder_url: string | null
+          graduation_year: string | null
+          id: string
+          major: string | null
+          notes: string | null
+          referral_friend_name: string | null
+          referral_source: string | null
+          resume_url: string | null
+          status: Database["public"]["Enums"]["candidate_status"]
+          university: string | null
+          updated_at: string
+          user_id: string
+          visa_status: string | null
+        }
+        Insert: {
+          created_at?: string
+          degree?: string | null
+          drive_folder_url?: string | null
+          graduation_year?: string | null
+          id?: string
+          major?: string | null
+          notes?: string | null
+          referral_friend_name?: string | null
+          referral_source?: string | null
+          resume_url?: string | null
+          status?: Database["public"]["Enums"]["candidate_status"]
+          university?: string | null
+          updated_at?: string
+          user_id: string
+          visa_status?: string | null
+        }
+        Update: {
+          created_at?: string
+          degree?: string | null
+          drive_folder_url?: string | null
+          graduation_year?: string | null
+          id?: string
+          major?: string | null
+          notes?: string | null
+          referral_friend_name?: string | null
+          referral_source?: string | null
+          resume_url?: string | null
+          status?: Database["public"]["Enums"]["candidate_status"]
+          university?: string | null
+          updated_at?: string
+          user_id?: string
+          visa_status?: string | null
+        }
+        Relationships: []
+      }
+      client_intake_sheets: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          data: Json
+          id: string
+          is_locked: boolean
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          data?: Json
+          id?: string
+          is_locked?: boolean
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          is_locked?: boolean
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_intake_sheets_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: true
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credential_intake_sheets: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          data: Json
+          edited_by: string | null
+          id: string
+          version: number
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          data?: Json
+          edited_by?: string | null
+          id?: string
+          version?: number
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          data?: Json
+          edited_by?: string | null
+          id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credential_intake_sheets_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_submission_logs: {
+        Row: {
+          applications_count: number
+          candidate_id: string
+          created_at: string
+          id: string
+          log_date: string
+          notes: string | null
+          recruiter_id: string
+          updated_at: string
+        }
+        Insert: {
+          applications_count?: number
+          candidate_id: string
+          created_at?: string
+          id?: string
+          log_date?: string
+          notes?: string | null
+          recruiter_id: string
+          updated_at?: string
+        }
+        Update: {
+          applications_count?: number
+          candidate_id?: string
+          created_at?: string
+          id?: string
+          log_date?: string
+          notes?: string | null
+          recruiter_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_submission_logs_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_logs: {
+        Row: {
+          candidate_id: string
+          company_name: string | null
+          created_at: string
+          id: string
+          interview_date: string | null
+          log_type: string
+          notes: string | null
+          outcome: string | null
+          role_title: string | null
+          submitted_by: string
+        }
+        Insert: {
+          candidate_id: string
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          interview_date?: string | null
+          log_type: string
+          notes?: string | null
+          outcome?: string | null
+          role_title?: string | null
+          submitted_by: string
+        }
+        Update: {
+          candidate_id?: string
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          interview_date?: string | null
+          log_type?: string
+          notes?: string | null
+          outcome?: string | null
+          role_title?: string | null
+          submitted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_logs_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_postings: {
+        Row: {
+          candidate_id: string
+          company_name: string
+          created_at: string
+          id: string
+          is_public: boolean
+          job_url: string
+          resume_used: string | null
+          role_title: string
+          status: string
+          submission_log_id: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          company_name?: string
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          job_url?: string
+          resume_used?: string | null
+          role_title?: string
+          status?: string
+          submission_log_id: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          company_name?: string
+          created_at?: string
+          id?: string
+          is_public?: boolean
+          job_url?: string
+          resume_used?: string | null
+          role_title?: string
+          status?: string
+          submission_log_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_postings_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_postings_submission_log_id_fkey"
+            columns: ["submission_log_id"]
+            isOneToOne: false
+            referencedRelation: "daily_submission_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          link: string | null
+          message: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          candidate_id: string
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          payment_date: string | null
+          payment_type: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          candidate_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_type?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          candidate_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_type?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      placement_closures: {
+        Row: {
+          bgv_company_name: string | null
+          candidate_id: string
+          closed_by: string
+          company_name: string
+          created_at: string
+          hr_email: string
+          id: string
+          interviewer_email: string | null
+          notes: string | null
+          offer_letter_url: string | null
+          role_title: string
+          salary: string
+          start_date: string
+        }
+        Insert: {
+          bgv_company_name?: string | null
+          candidate_id: string
+          closed_by: string
+          company_name: string
+          created_at?: string
+          hr_email: string
+          id?: string
+          interviewer_email?: string | null
+          notes?: string | null
+          offer_letter_url?: string | null
+          role_title: string
+          salary: string
+          start_date: string
+        }
+        Update: {
+          bgv_company_name?: string | null
+          candidate_id?: string
+          closed_by?: string
+          company_name?: string
+          created_at?: string
+          hr_email?: string
+          id?: string
+          interviewer_email?: string | null
+          notes?: string | null
+          offer_letter_url?: string | null
+          role_title?: string
+          salary?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placement_closures_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: true
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      recruiter_profiles: {
+        Row: {
+          bank_account_number: string | null
+          bank_name: string | null
+          bank_routing_number: string | null
+          created_at: string
+          documents_url: string | null
+          id: string
+          location: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bank_account_number?: string | null
+          bank_name?: string | null
+          bank_routing_number?: string | null
+          created_at?: string
+          documents_url?: string | null
+          id?: string
+          location?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bank_account_number?: string | null
+          bank_name?: string | null
+          bank_routing_number?: string | null
+          created_at?: string
+          documents_url?: string | null
+          id?: string
+          location?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          friend_email: string
+          friend_name: string
+          friend_phone: string | null
+          id: string
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          friend_email: string
+          friend_name: string
+          friend_phone?: string | null
+          id?: string
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          friend_email?: string
+          friend_name?: string
+          friend_phone?: string | null
+          id?: string
+          referrer_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_suggestions: {
+        Row: {
+          candidate_confirmed: boolean | null
+          candidate_id: string
+          confirmed_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          role_title: string
+          suggested_by: string | null
+        }
+        Insert: {
+          candidate_confirmed?: boolean | null
+          candidate_id: string
+          confirmed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          role_title: string
+          suggested_by?: string | null
+        }
+        Update: {
+          candidate_confirmed?: boolean | null
+          candidate_id?: string
+          confirmed_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          role_title?: string
+          suggested_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_suggestions_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "candidate" | "recruiter" | "admin"
+      candidate_status:
+        | "lead"
+        | "approved"
+        | "intake_submitted"
+        | "roles_suggested"
+        | "roles_confirmed"
+        | "paid"
+        | "credential_completed"
+        | "active_marketing"
+        | "paused"
+        | "cancelled"
+        | "placed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +815,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["candidate", "recruiter", "admin"],
+      candidate_status: [
+        "lead",
+        "approved",
+        "intake_submitted",
+        "roles_suggested",
+        "roles_confirmed",
+        "paid",
+        "credential_completed",
+        "active_marketing",
+        "paused",
+        "cancelled",
+        "placed",
+      ],
+    },
   },
 } as const
