@@ -10,9 +10,11 @@ import CandidateRolesPage from "@/pages/candidate/CandidateRolesPage";
 import CandidateCredentialsPage from "@/pages/candidate/CandidateCredentialsPage";
 import CandidatePaymentsPage from "@/pages/candidate/CandidatePaymentsPage";
 import CandidateApplicationsPage from "@/pages/candidate/CandidateApplicationsPage";
+import CandidateInterviewsPage from "@/pages/candidate/CandidateInterviewsPage";
+import CandidateReferralsPage from "@/pages/candidate/CandidateReferralsPage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, Briefcase, Users, Calendar, UserPlus, ClipboardList, Bell, DollarSign, KeyRound } from "lucide-react";
+import { LayoutDashboard, FileText, Briefcase, Users, Calendar, UserPlus, ClipboardList, Bell, DollarSign, KeyRound, Phone } from "lucide-react";
 
 const navItems = [
   { label: "Overview", path: "/candidate-dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
@@ -21,8 +23,36 @@ const navItems = [
   { label: "Credentials", path: "/candidate-dashboard/credentials", icon: <KeyRound className="h-4 w-4" /> },
   { label: "Payments", path: "/candidate-dashboard/payments", icon: <DollarSign className="h-4 w-4" /> },
   { label: "Applications", path: "/candidate-dashboard/applications", icon: <ClipboardList className="h-4 w-4" /> },
+  { label: "Interviews", path: "/candidate-dashboard/interviews", icon: <Phone className="h-4 w-4" /> },
   { label: "Refer a Friend", path: "/candidate-dashboard/referrals", icon: <UserPlus className="h-4 w-4" /> },
 ];
+
+const TrainingButton = ({ candidate, type, label }: { candidate: any; type: string; label: string }) => {
+  const [url, setUrl] = useState("https://cal.com/hyrind");
+
+  useEffect(() => {
+    const keyMap: Record<string, string> = {
+      screening_practice: "cal_screening_practice",
+      interview_training: "cal_interview_training",
+      operations_call: "cal_operations_call",
+    };
+    supabase.from("admin_config").select("config_value").eq("config_key", keyMap[type]).maybeSingle()
+      .then(({ data }) => { if (data?.config_value) setUrl(data.config_value); });
+  }, [type]);
+
+  const handleClick = async () => {
+    if (candidate?.id) {
+      await supabase.from("training_clicks").insert({ candidate_id: candidate.id, training_type: type });
+    }
+    window.open(url, "_blank");
+  };
+
+  return (
+    <Button variant="outline" className="justify-start" onClick={handleClick}>
+      <Calendar className="mr-2 h-4 w-4" /> {label}
+    </Button>
+  );
+};
 
 const CandidateDashboard = () => {
   const { user } = useAuth();
@@ -103,6 +133,12 @@ const CandidateDashboard = () => {
   }
   if (subPath === "applications") {
     return <CandidateApplicationsPage candidate={candidate} />;
+  }
+  if (subPath === "interviews") {
+    return <CandidateInterviewsPage candidate={candidate} />;
+  }
+  if (subPath === "referrals") {
+    return <CandidateReferralsPage candidate={candidate} />;
   }
 
   const status = candidate?.status || "lead";
@@ -206,11 +242,11 @@ const CandidateDashboard = () => {
           )}
 
           <Card>
-            <CardHeader><CardTitle>Quick Links</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Schedule Training</CardTitle></CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-2">
-              <Button variant="outline" className="justify-start" onClick={() => window.open("https://cal.com/hyrind", "_blank")}>
-                <Calendar className="mr-2 h-4 w-4" /> Schedule Training
-              </Button>
+              <TrainingButton candidate={candidate} type="screening_practice" label="Screening Practice" />
+              <TrainingButton candidate={candidate} type="interview_training" label="Interview Training" />
+              <TrainingButton candidate={candidate} type="operations_call" label="Operations Call" />
               {candidate?.drive_folder_url && (
                 <Button variant="outline" className="justify-start" onClick={() => window.open(candidate.drive_folder_url, "_blank")}>
                   <FileText className="mr-2 h-4 w-4" /> Resume Folder

@@ -38,6 +38,7 @@ const AdminCandidateDetail = ({ candidateId }: AdminCandidateDetailProps) => {
   const [credentials, setCredentials] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [editorProfiles, setEditorProfiles] = useState<Record<string, string>>({});
+  const [interviewLogs, setInterviewLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // New role form
@@ -82,6 +83,9 @@ const AdminCandidateDetail = ({ candidateId }: AdminCandidateDetailProps) => {
           setEditorProfiles(map);
         }
       }
+
+      const { data: interviews } = await supabase.from("interview_logs").select("*").eq("candidate_id", cand.id).order("interview_date", { ascending: false });
+      setInterviewLogs(interviews || []);
     }
     setLoading(false);
   };
@@ -206,6 +210,21 @@ const AdminCandidateDetail = ({ candidateId }: AdminCandidateDetailProps) => {
               <div><span className="text-muted-foreground">Registered:</span> {new Date(candidate.created_at).toLocaleDateString()}</div>
             </CardContent>
           </Card>
+
+          {/* Interview Activity Summary */}
+          {interviewLogs.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle>Interview Activity</CardTitle></CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-6 text-sm">
+                  <div><span className="text-muted-foreground">Total Logs:</span> <strong className="text-card-foreground">{interviewLogs.length}</strong></div>
+                  <div><span className="text-muted-foreground">Scheduled:</span> <strong className="text-card-foreground">{interviewLogs.filter((l: any) => l.outcome === "Scheduled").length}</strong></div>
+                  <div><span className="text-muted-foreground">Completed:</span> <strong className="text-card-foreground">{interviewLogs.filter((l: any) => l.outcome === "Completed").length}</strong></div>
+                  <div><span className="text-muted-foreground">Offers:</span> <strong className="text-card-foreground">{interviewLogs.filter((l: any) => l.outcome === "Offer").length}</strong></div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Intake Tab */}
