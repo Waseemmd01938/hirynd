@@ -9,12 +9,13 @@ import CandidateIntakePage from "@/pages/candidate/CandidateIntakePage";
 import CandidateRolesPage from "@/pages/candidate/CandidateRolesPage";
 import CandidateCredentialsPage from "@/pages/candidate/CandidateCredentialsPage";
 import CandidatePaymentsPage from "@/pages/candidate/CandidatePaymentsPage";
+import CandidateBillingPage from "@/pages/candidate/CandidateBillingPage";
 import CandidateApplicationsPage from "@/pages/candidate/CandidateApplicationsPage";
 import CandidateInterviewsPage from "@/pages/candidate/CandidateInterviewsPage";
 import CandidateReferralsPage from "@/pages/candidate/CandidateReferralsPage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, Briefcase, Users, Calendar, UserPlus, ClipboardList, Bell, DollarSign, KeyRound, Phone, Award } from "lucide-react";
+import { LayoutDashboard, FileText, Briefcase, Users, Calendar, UserPlus, ClipboardList, Bell, DollarSign, KeyRound, Phone, Award, CreditCard, AlertTriangle } from "lucide-react";
 
 const navItems = [
   { label: "Overview", path: "/candidate-dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
@@ -22,6 +23,7 @@ const navItems = [
   { label: "Roles", path: "/candidate-dashboard/roles", icon: <Briefcase className="h-4 w-4" /> },
   { label: "Credentials", path: "/candidate-dashboard/credentials", icon: <KeyRound className="h-4 w-4" /> },
   { label: "Payments", path: "/candidate-dashboard/payments", icon: <DollarSign className="h-4 w-4" /> },
+  { label: "Billing", path: "/candidate-dashboard/billing", icon: <CreditCard className="h-4 w-4" /> },
   { label: "Applications", path: "/candidate-dashboard/applications", icon: <ClipboardList className="h-4 w-4" /> },
   { label: "Interviews", path: "/candidate-dashboard/interviews", icon: <Phone className="h-4 w-4" /> },
   { label: "Refer a Friend", path: "/candidate-dashboard/referrals", icon: <UserPlus className="h-4 w-4" /> },
@@ -61,6 +63,7 @@ const CandidateDashboard = () => {
   const [candidate, setCandidate] = useState<any>(null);
   const [team, setTeam] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -110,6 +113,17 @@ const CandidateDashboard = () => {
       .limit(5);
     setNotifications(notifs || []);
 
+    // Fetch subscription if candidate exists
+    if (cand || candidate) {
+      const candId = cand?.id || candidate?.id;
+      const { data: sub } = await supabase
+        .from("candidate_subscriptions")
+        .select("*")
+        .eq("candidate_id", candId)
+        .maybeSingle();
+      setSubscription(sub);
+    }
+
     setLoading(false);
   };
 
@@ -131,6 +145,9 @@ const CandidateDashboard = () => {
   }
   if (subPath === "payments") {
     return <CandidatePaymentsPage candidate={candidate} />;
+  }
+  if (subPath === "billing") {
+    return <CandidateBillingPage candidate={candidate} />;
   }
   if (subPath === "applications") {
     return <CandidateApplicationsPage candidate={candidate} />;
@@ -188,6 +205,19 @@ const CandidateDashboard = () => {
             <Card className="border-destructive/30 bg-destructive/5">
               <CardContent className="p-4">
                 <p className="font-semibold text-card-foreground capitalize">{status} — {getNextAction()}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Billing Issue Banner */}
+          {subscription && ["past_due", "canceled", "unpaid"].includes(subscription.status) && (
+            <Card className="border-destructive/30 bg-destructive/5">
+              <CardContent className="p-4 flex items-center gap-3">
+                <AlertTriangle className="h-6 w-6 text-destructive" />
+                <div>
+                  <p className="font-semibold text-card-foreground">Billing Issue — {subscription.status === "past_due" ? "Payment Past Due" : subscription.status === "canceled" ? "Subscription Canceled" : "Payment Required"}</p>
+                  <p className="text-sm text-muted-foreground">Please visit your <a href="/candidate-dashboard/billing" className="underline text-primary">Billing page</a> to resolve this.</p>
+                </div>
               </CardContent>
             </Card>
           )}

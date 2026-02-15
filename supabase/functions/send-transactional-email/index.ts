@@ -24,7 +24,14 @@ type EmailType =
   | "approval_rejected"
   | "interest_confirmation"
   | "interest_admin_notification"
-  | "referral_email";
+  | "referral_email"
+  | "subscription_payment_success"
+  | "subscription_payment_failed"
+  | "subscription_past_due_notice"
+  | "subscription_canceled"
+  | "subscription_reactivated"
+  | "subscription_payment_failed_admin"
+  | "subscription_canceled_admin";
 
 interface EmailRequest {
   type: EmailType;
@@ -188,6 +195,111 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
             </ul>
             <p><a href="https://hyrind.com/contact" style="display: inline-block; padding: 12px 24px; background: #1e3a5f; color: white; text-decoration: none; border-radius: 6px;">Learn More & Get Started</a></p>
             <p>Best regards,<br/>The HYRIND Team</p>
+          </div>
+        `,
+      };
+
+    case "subscription_payment_success":
+      return {
+        to: [email],
+        subject: "HYRIND — Subscription Payment Received",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #1e3a5f;">Payment Received</h1>
+            <p>Hi ${name},</p>
+            <p>Your subscription payment of <strong>$${payload.amount || "0"}</strong> has been successfully processed.</p>
+            <p>Your marketing services will continue uninterrupted. Next billing date: <strong>${payload.next_billing_at || "N/A"}</strong></p>
+            <p>Best regards,<br/>The HYRIND Team</p>
+          </div>
+        `,
+      };
+
+    case "subscription_payment_failed":
+      return {
+        to: [email],
+        subject: "HYRIND — Subscription Payment Failed",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #c0392b;">Payment Failed</h1>
+            <p>Hi ${name},</p>
+            <p>We were unable to process your subscription payment. Please update your payment method to avoid any disruption to your marketing services.</p>
+            <p>If you need assistance, contact us at <a href="mailto:support@hyrind.com">support@hyrind.com</a>.</p>
+            <p>Best regards,<br/>The HYRIND Team</p>
+          </div>
+        `,
+      };
+
+    case "subscription_past_due_notice":
+      return {
+        to: [email],
+        subject: "HYRIND — Subscription Past Due",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #c0392b;">Subscription Past Due</h1>
+            <p>Hi ${name},</p>
+            <p>Your subscription is past due. You have a grace period ending on <strong>${payload.grace_period_ends_at || "N/A"}</strong>.</p>
+            <p>After the grace period, your marketing services will be paused. Please update your payment method as soon as possible.</p>
+            <p><a href="https://hyrind.com/candidate-dashboard/billing" style="display: inline-block; padding: 12px 24px; background: #c0392b; color: white; text-decoration: none; border-radius: 6px;">Update Payment</a></p>
+            <p>Best regards,<br/>The HYRIND Team</p>
+          </div>
+        `,
+      };
+
+    case "subscription_canceled":
+      return {
+        to: [email],
+        subject: "HYRIND — Subscription Canceled",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #1e3a5f;">Subscription Canceled</h1>
+            <p>Hi ${name},</p>
+            <p>Your subscription has been canceled. Your marketing services have been paused.</p>
+            <p>If you'd like to reactivate, please contact us at <a href="mailto:support@hyrind.com">support@hyrind.com</a>.</p>
+            <p>Best regards,<br/>The HYRIND Team</p>
+          </div>
+        `,
+      };
+
+    case "subscription_reactivated":
+      return {
+        to: [email],
+        subject: "HYRIND — Subscription Reactivated!",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #1e3a5f;">Subscription Reactivated</h1>
+            <p>Hi ${name},</p>
+            <p>Great news! Your subscription has been reactivated and your marketing services will resume.</p>
+            <p>Best regards,<br/>The HYRIND Team</p>
+          </div>
+        `,
+      };
+
+    case "subscription_payment_failed_admin":
+      return {
+        to: [],
+        subject: `Subscription Payment Failed: ${name}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #c0392b;">Subscription Payment Failed</h2>
+            <table style="border-collapse: collapse; width: 100%;">
+              <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Candidate</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${name}</td></tr>
+              <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Email</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${email}</td></tr>
+              <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Amount</td><td style="padding: 8px; border-bottom: 1px solid #eee;">$${payload.amount || "0"}</td></tr>
+            </table>
+            <p style="margin-top: 16px;"><a href="https://hyrind.com/admin-dashboard">View in Admin Dashboard</a></p>
+          </div>
+        `,
+      };
+
+    case "subscription_canceled_admin":
+      return {
+        to: [],
+        subject: `Subscription Canceled: ${name}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #1e3a5f;">Subscription Canceled</h2>
+            <p>Candidate <strong>${name}</strong> (${email}) has had their subscription canceled.</p>
+            <p style="margin-top: 16px;"><a href="https://hyrind.com/admin-dashboard">View in Admin Dashboard</a></p>
           </div>
         `,
       };

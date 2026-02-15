@@ -115,6 +115,68 @@ export type Database = {
           },
         ]
       }
+      candidate_subscriptions: {
+        Row: {
+          amount: number
+          billing_cycle: string
+          canceled_at: string | null
+          candidate_id: string
+          created_at: string
+          currency: string
+          grace_period_ends_at: string | null
+          id: string
+          last_payment_at: string | null
+          next_billing_at: string | null
+          provider: Database["public"]["Enums"]["payment_provider"]
+          provider_customer_id: string | null
+          provider_subscription_id: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          billing_cycle?: string
+          canceled_at?: string | null
+          candidate_id: string
+          created_at?: string
+          currency?: string
+          grace_period_ends_at?: string | null
+          id?: string
+          last_payment_at?: string | null
+          next_billing_at?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          billing_cycle?: string
+          canceled_at?: string | null
+          candidate_id?: string
+          created_at?: string
+          currency?: string
+          grace_period_ends_at?: string | null
+          id?: string
+          last_payment_at?: string | null
+          next_billing_at?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"]
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_subscriptions_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: true
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidates: {
         Row: {
           created_at: string
@@ -734,6 +796,57 @@ export type Database = {
           },
         ]
       }
+      subscription_payments: {
+        Row: {
+          amount: number
+          candidate_id: string
+          created_at: string
+          currency: string
+          id: string
+          payment_method: string | null
+          payment_status: string
+          provider_payment_id: string | null
+          subscription_id: string
+        }
+        Insert: {
+          amount: number
+          candidate_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method?: string | null
+          payment_status?: string
+          provider_payment_id?: string | null
+          subscription_id: string
+        }
+        Update: {
+          amount?: number
+          candidate_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method?: string | null
+          payment_status?: string
+          provider_payment_id?: string | null
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_clicks: {
         Row: {
           candidate_id: string
@@ -824,6 +937,21 @@ export type Database = {
         }
         Returns: string
       }
+      admin_create_subscription: {
+        Args: {
+          _amount: number
+          _candidate_id: string
+          _next_billing_at?: string
+          _notes?: string
+          _provider?: string
+          _status?: string
+        }
+        Returns: string
+      }
+      admin_extend_grace_period: {
+        Args: { _candidate_id: string; _days?: number }
+        Returns: undefined
+      }
       admin_get_pending_approvals: {
         Args: never
         Returns: {
@@ -845,6 +973,16 @@ export type Database = {
         }
         Returns: string
       }
+      admin_record_subscription_payment: {
+        Args: {
+          _advance_billing?: boolean
+          _amount: number
+          _candidate_id: string
+          _payment_method?: string
+          _payment_status?: string
+        }
+        Returns: string
+      }
       admin_start_marketing: {
         Args: { _candidate_id: string }
         Returns: undefined
@@ -854,6 +992,10 @@ export type Database = {
         Returns: undefined
       }
       admin_update_candidate_status: {
+        Args: { _candidate_id: string; _new_status: string; _reason?: string }
+        Returns: undefined
+      }
+      admin_update_subscription_status: {
         Args: { _candidate_id: string; _new_status: string; _reason?: string }
         Returns: undefined
       }
@@ -878,6 +1020,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      run_billing_checks: { Args: never; Returns: Json }
       submit_intake_form: {
         Args: { _candidate_id: string; _form_data: Json }
         Returns: undefined
@@ -901,6 +1044,13 @@ export type Database = {
         | "paused"
         | "cancelled"
         | "placed"
+      payment_provider: "manual" | "razorpay" | "stripe"
+      subscription_status:
+        | "trialing"
+        | "active"
+        | "past_due"
+        | "canceled"
+        | "unpaid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1041,6 +1191,14 @@ export const Constants = {
         "paused",
         "cancelled",
         "placed",
+      ],
+      payment_provider: ["manual", "razorpay", "stripe"],
+      subscription_status: [
+        "trialing",
+        "active",
+        "past_due",
+        "canceled",
+        "unpaid",
       ],
     },
   },

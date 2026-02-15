@@ -12,11 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
-import { LayoutDashboard, Users, UserPlus, DollarSign, Shield, FileText, Plus, Briefcase, CheckCircle, XCircle, Clock, History, Award, Settings, BarChart } from "lucide-react";
+import { LayoutDashboard, Users, UserPlus, DollarSign, Shield, FileText, Plus, Briefcase, CheckCircle, XCircle, Clock, History, Award, Settings, BarChart, CreditCard } from "lucide-react";
 import AdminAssignmentsTab from "@/components/admin/AdminAssignmentsTab";
 import AdminPlacementTab from "@/components/admin/AdminPlacementTab";
 import AdminAuditTab from "@/components/admin/AdminAuditTab";
 import AdminQAChecklist from "@/components/admin/AdminQAChecklist";
+import AdminBillingTab from "@/components/admin/AdminBillingTab";
 
 const navItems = [
   { label: "Operations", path: "/admin-dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
@@ -182,6 +183,7 @@ const AdminCandidateDetail = ({ candidateId }: AdminCandidateDetailProps) => {
           <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="credentials">Credentials</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
           <TabsTrigger value="assignments">Assignments</TabsTrigger>
           <TabsTrigger value="placement">Placement</TabsTrigger>
           <TabsTrigger value="audit">Audit</TabsTrigger>
@@ -344,6 +346,11 @@ const AdminCandidateDetail = ({ candidateId }: AdminCandidateDetailProps) => {
         {/* Assignments Tab */}
         <TabsContent value="assignments">
           <AdminAssignmentsTab candidateId={candidateId} candidateStatus={status} hasCredentials={credentials.length > 0} onRefresh={fetchAll} />
+        </TabsContent>
+
+        {/* Billing Tab */}
+        <TabsContent value="billing">
+          <AdminBillingTab candidateId={candidateId} onRefresh={fetchAll} />
         </TabsContent>
 
         {/* Placement Tab */}
