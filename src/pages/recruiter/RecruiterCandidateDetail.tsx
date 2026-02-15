@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Users, FileText, Briefcase, KeyRound, ClipboardList, Plus, Trash2, User, Phone, Shield, Award } from "lucide-react";
+import { Users, FileText, Briefcase, KeyRound, ClipboardList, Plus, Trash2, User, Phone, Shield, Award, AlertTriangle } from "lucide-react";
 import RecruiterInterviewsTab from "@/components/recruiter/RecruiterInterviewsTab";
 import AdminAuditTab from "@/components/admin/AdminAuditTab";
 
@@ -39,6 +39,7 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
   const [credentials, setCredentials] = useState<any[]>([]);
   const [dailyLogs, setDailyLogs] = useState<any[]>([]);
   const [jobPostings, setJobPostings] = useState<any[]>([]);
+  const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   // Credential form
@@ -80,6 +81,10 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
         const { data: jobs } = await supabase.from("job_postings").select("*").in("submission_log_id", logIds).order("created_at", { ascending: false });
         setJobPostings(jobs || []);
       }
+
+      // Fetch subscription
+      const { data: sub } = await supabase.from("candidate_subscriptions").select("*").eq("candidate_id", cand.id).maybeSingle();
+      setSubscription(sub);
     }
     setLoading(false);
   };
@@ -193,6 +198,17 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
           </CardContent>
         </Card>
       )}
+      {subscription && ["past_due", "canceled", "unpaid"].includes(subscription.status) && (
+        <Card className="mb-4 border-destructive/30 bg-destructive/5">
+          <CardContent className="p-4 flex items-center gap-3">
+            <AlertTriangle className="h-6 w-6 text-destructive" />
+            <div>
+              <p className="font-semibold text-card-foreground">Billing Issue — Marketing paused</p>
+              <p className="text-sm text-muted-foreground">This candidate has a billing issue. Daily logs and credential edits are disabled until resolved.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="overview">
         <TabsList className="flex-wrap">
@@ -262,7 +278,7 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
 
         {/* Credentials (editable via RPC) */}
         <TabsContent value="credentials" className="space-y-4">
-          {candidate.status === "paid" || ["credential_completed", "active_marketing", "placed"].includes(candidate.status) ? (
+          {(candidate.status === "paid" || ["credential_completed", "active_marketing", "placed"].includes(candidate.status)) && !(subscription && ["past_due", "canceled", "unpaid"].includes(subscription?.status)) ? (
             <>
               <Card>
                 <CardHeader>
@@ -317,8 +333,8 @@ const RecruiterCandidateDetail = ({ candidateId }: RecruiterCandidateDetailProps
 
         {/* Daily Log */}
         <TabsContent value="daily-log" className="space-y-4">
-          {["placed", "paused", "cancelled"].includes(candidate.status) ? (
-            <Card><CardContent className="p-6"><p className="text-muted-foreground">Daily logs are disabled for {candidate.status} candidates.</p></CardContent></Card>
+          {["placed", "paused", "cancelled"].includes(candidate.status) || (subscription && ["past_due", "canceled", "unpaid"].includes(subscription?.status)) ? (
+            <Card><CardContent className="p-6"><p className="text-muted-foreground">Daily logs are disabled{subscription && ["past_due", "canceled", "unpaid"].includes(subscription?.status) ? " due to billing issue" : ` for ${candidate.status} candidates`}.</p></CardContent></Card>
           ) : (
           <>
           <Card>

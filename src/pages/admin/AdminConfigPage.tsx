@@ -20,6 +20,9 @@ const AdminConfigPage = () => {
     { key: "cal_screening_practice", label: "Screening Practice Cal.com URL" },
     { key: "cal_interview_training", label: "Interview Training Cal.com URL" },
     { key: "cal_operations_call", label: "Operations Call Cal.com URL" },
+    { key: "default_grace_period_days", label: "Default Grace Period (days)" },
+    { key: "subscription_amount_default", label: "Default Subscription Amount ($)" },
+    { key: "allow_auto_resume_after_payment", label: "Auto Resume After Payment (true/false)" },
   ];
 
   const fetchData = async () => {

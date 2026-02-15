@@ -114,6 +114,46 @@ const AdminReportsPage = () => {
     setExporting("");
   };
 
+  const exportSubscriptionLedger = async () => {
+    setExporting("subscriptions");
+    const { data: subs } = await supabase.from("candidate_subscriptions").select("*");
+    if (!subs || subs.length === 0) { toast({ title: "No data" }); setExporting(""); return; }
+
+    const candidateIds = subs.map(s => s.candidate_id);
+    const { data: candidates } = await supabase.from("candidates").select("id, status, user_id").in("id", candidateIds);
+    const userIds = (candidates || []).map(c => c.user_id);
+    const { data: profiles } = userIds.length > 0 ? await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds) : { data: [] };
+    const { data: assignments } = await supabase.from("candidate_assignments").select("candidate_id, recruiter_id, role_type").eq("is_active", true).in("candidate_id", candidateIds);
+    const recruiterIds = [...new Set((assignments || []).map(a => a.recruiter_id))];
+    const { data: recruiterProfiles } = recruiterIds.length > 0 ? await supabase.from("profiles").select("user_id, full_name").in("user_id", recruiterIds) : { data: [] };
+    const { data: payments } = await supabase.from("subscription_payments").select("candidate_id, amount, payment_status").in("candidate_id", candidateIds);
+
+    const rows = subs.map(s => {
+      const cand = candidates?.find(c => c.id === s.candidate_id);
+      const prof = profiles?.find(p => p.user_id === cand?.user_id);
+      const assigns = (assignments || []).filter(a => a.candidate_id === s.candidate_id);
+      const recruiters = assigns.map(a => {
+        const rp = recruiterProfiles?.find(p => p.user_id === a.recruiter_id);
+        return rp?.full_name || "Unknown";
+      }).join("; ");
+      const totalPaid = (payments || []).filter(p => p.candidate_id === s.candidate_id && p.payment_status === "success").reduce((sum, p) => sum + Number(p.amount), 0);
+      return {
+        candidate: prof?.full_name || "",
+        recruiters,
+        subscription_status: s.status,
+        next_billing_at: s.next_billing_at || "",
+        last_payment: s.last_payment_at || "",
+        total_paid: totalPaid,
+        grace_period_end: s.grace_period_ends_at || "",
+        marketing_status: cand?.status || "",
+      };
+    });
+
+    downloadCSV(rows, "subscription-ledger.csv");
+    toast({ title: "Subscription ledger exported" });
+    setExporting("");
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -148,6 +188,18 @@ const AdminReportsPage = () => {
         <CardContent>
           <Button onClick={exportCandidateActivity} disabled={exporting === "activity"}>
             <Download className="mr-2 h-4 w-4" /> {exporting === "activity" ? "Exporting..." : "Export CSV"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscription Ledger Export</CardTitle>
+          <CardDescription>Candidate, recruiters, subscription status, billing, total paid.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={exportSubscriptionLedger} disabled={exporting === "subscriptions"}>
+            <Download className="mr-2 h-4 w-4" /> {exporting === "subscriptions" ? "Exporting..." : "Export CSV"}
           </Button>
         </CardContent>
       </Card>
