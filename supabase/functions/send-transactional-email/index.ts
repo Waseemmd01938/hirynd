@@ -65,9 +65,11 @@ async function getAdminEmails(): Promise<string[]> {
     .single();
 
   if (data?.config_value) {
-    return data.config_value.split(",").map((e: string) => e.trim()).filter(Boolean);
+    const emails = data.config_value.split(",").map((e: string) => e.trim()).filter(Boolean);
+    if (emails.length > 0) return emails;
   }
-  return ["admin@hyrind.com"];
+  console.warn("No admin_notification_email configured in admin_config, cannot send admin email");
+  return [];
 }
 
 function buildEmail(type: EmailType, payload: Record<string, string>): { subject: string; html: string; to: string[] } | null {

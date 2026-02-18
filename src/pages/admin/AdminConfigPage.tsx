@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Save, Calendar, MousePointer } from "lucide-react";
+import { Settings, Save, Calendar, MousePointer, Mail } from "lucide-react";
 
 const AdminConfigPage = () => {
   const { toast } = useToast();
@@ -14,6 +14,7 @@ const AdminConfigPage = () => {
   const [trainingClicks, setTrainingClicks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
 
   const CONFIG_KEYS = [
     { key: "admin_notification_email", label: "Admin Notification Email(s) (comma-separated)" },
@@ -100,9 +101,32 @@ const AdminConfigPage = () => {
               />
             </div>
           ))}
-          <Button variant="hero" onClick={handleSave} disabled={saving}>
-            <Save className="mr-2 h-4 w-4" /> {saving ? "Saving..." : "Save Configuration"}
-          </Button>
+          <div className="flex gap-3">
+            <Button variant="hero" onClick={handleSave} disabled={saving}>
+              <Save className="mr-2 h-4 w-4" /> {saving ? "Saving..." : "Save Configuration"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                setSendingTest(true);
+                const { error } = await supabase.functions.invoke("send-transactional-email", {
+                  body: {
+                    type: "subscription_created_admin",
+                    payload: { name: "Test Candidate", email: "test@example.com", amount: "99" },
+                  },
+                });
+                toast({
+                  title: error ? "Test email failed" : "Test email sent",
+                  description: error ? error.message : `Sent to ${configs["admin_notification_email"] || "configured admin email"}`,
+                  variant: error ? "destructive" : "default",
+                });
+                setSendingTest(false);
+              }}
+              disabled={sendingTest}
+            >
+              <Mail className="mr-2 h-4 w-4" /> {sendingTest ? "Sending..." : "Send Test Admin Email"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
