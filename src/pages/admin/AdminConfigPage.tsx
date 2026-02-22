@@ -17,6 +17,7 @@ const AdminConfigPage = () => {
   const [sendingTest, setSendingTest] = useState(false);
 
   const CONFIG_KEYS = [
+    { key: "site_url", label: "Site URL (used in email links)" },
     { key: "admin_notification_email", label: "Admin Notification Email(s) (comma-separated)" },
     { key: "cal_screening_practice", label: "Screening Practice Cal.com URL" },
     { key: "cal_interview_training", label: "Interview Training Cal.com URL" },

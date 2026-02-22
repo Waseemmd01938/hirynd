@@ -102,6 +102,20 @@ async function getAdminConfigFlag(key: string): Promise<boolean> {
   return data?.config_value === "true";
 }
 
+async function getSiteUrl(req?: Request): Promise<string> {
+  const { data } = await supabase
+    .from("admin_config")
+    .select("config_value")
+    .eq("config_key", "site_url")
+    .single();
+  if (data?.config_value) return data.config_value.replace(/\/+$/, "");
+  if (req) {
+    const origin = req.headers.get("origin");
+    if (origin) return origin.replace(/\/+$/, "");
+  }
+  return "https://hyrnd.netlify.app";
+}
+
 function wrap(body: string): string {
   return `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">${body}</div>`;
 }
@@ -110,7 +124,7 @@ function btn(url: string, label: string, color = "#1e3a5f"): string {
   return `<p><a href="${url}" style="display: inline-block; padding: 12px 24px; background: ${color}; color: white; text-decoration: none; border-radius: 6px;">${label}</a></p>`;
 }
 
-function buildEmail(type: EmailType, payload: Record<string, string>): { subject: string; html: string; to: string[] } | null {
+function buildEmail(type: EmailType, payload: Record<string, string>, siteUrl: string): { subject: string; html: string; to: string[] } | null {
   const name = payload.name || "there";
   const email = payload.email || "";
 
@@ -140,7 +154,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
             <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Email</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${email}</td></tr>
             <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Role</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${payload.role || "candidate"}</td></tr>
           </table>
-          ${btn("https://hyrind.com/admin-dashboard/approvals", "Review in Admin Dashboard")}
+          ${btn(`${siteUrl}/admin-dashboard/approvals`, "Review in Admin Dashboard")}
         `),
       };
 
@@ -152,7 +166,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <h1 style="color: #1e3a5f;">Account Approved!</h1>
           <p>Hi ${name},</p>
           <p>Great news! Your HYRIND account has been approved. You can now log in and access your dashboard.</p>
-          ${btn("https://hyrind.com/candidate-login", "Log In Now")}
+          ${btn(`${siteUrl}/candidate-login`, "Log In Now")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -195,7 +209,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
             <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Email</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${email}</td></tr>
             <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Phone</td><td style="padding: 8px; border-bottom: 1px solid #eee;">${payload.phone || "—"}</td></tr>
           </table>
-          <p style="margin-top: 16px;"><a href="https://hyrind.com/admin-dashboard">View in Admin Dashboard</a></p>
+          <p style="margin-top: 16px;"><a href="${siteUrl}/admin-dashboard">View in Admin Dashboard</a></p>
         `),
       };
 
@@ -209,7 +223,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <p>Hi ${payload.friend_name || "there"},</p>
           <p><strong>${payload.referrer_name || "Someone you know"}</strong> thinks you'd benefit from HYRIND's career support services.</p>
           ${payload.referral_note ? `<p><em>"${payload.referral_note}"</em></p>` : ""}
-          ${btn("https://hyrind.com/contact", "Learn More & Get Started")}
+          ${btn(`${siteUrl}/contact`, "Learn More & Get Started")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -235,7 +249,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <h1 style="color: #1e3a5f;">Intake Form Received</h1>
           <p>Hi ${name},</p>
           <p>Your intake form has been submitted successfully. Our team will review it and suggest suitable roles for you.</p>
-          ${btn("https://hyrind.com/candidate-dashboard", "View Dashboard")}
+          ${btn(`${siteUrl}/candidate-dashboard`, "View Dashboard")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -247,7 +261,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
         html: wrap(`
           <h2 style="color: #1e3a5f;">Intake Form Submitted</h2>
           <p>Candidate <strong>${name}</strong> (${email}) has submitted their intake form and is awaiting role suggestions.</p>
-          ${btn("https://hyrind.com/admin-dashboard/candidates", "View Candidates")}
+          ${btn(`${siteUrl}/admin-dashboard/candidates`, "View Candidates")}
         `),
       };
 
@@ -259,7 +273,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <h1 style="color: #1e3a5f;">Roles Confirmed!</h1>
           <p>Hi ${name},</p>
           <p>You've confirmed your role selections. The next step is to complete your payment to proceed with credential preparation.</p>
-          ${btn("https://hyrind.com/candidate-dashboard/payments", "View Payments")}
+          ${btn(`${siteUrl}/candidate-dashboard/payments`, "View Payments")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -271,7 +285,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
         html: wrap(`
           <h2 style="color: #1e3a5f;">Roles Confirmed</h2>
           <p>Candidate <strong>${name}</strong> (${email}) has confirmed their role selections and is awaiting payment.</p>
-          ${btn("https://hyrind.com/admin-dashboard/candidates", "View Candidates")}
+          ${btn(`${siteUrl}/admin-dashboard/candidates`, "View Candidates")}
         `),
       };
 
@@ -283,7 +297,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <h1 style="color: #1e3a5f;">Credentials Submitted!</h1>
           <p>Hi ${name},</p>
           <p>Your credential intake has been submitted. Your recruiter will review and prepare your marketing materials.</p>
-          ${btn("https://hyrind.com/candidate-dashboard/credentials", "View Credentials")}
+          ${btn(`${siteUrl}/candidate-dashboard/credentials`, "View Credentials")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -296,7 +310,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <h1 style="color: #1e3a5f;">Credentials Updated</h1>
           <p>Hi ${name},</p>
           <p>Your credential intake sheet has been updated by your team. Please review the changes in your dashboard.</p>
-          ${btn("https://hyrind.com/candidate-dashboard/credentials", "View Credentials")}
+          ${btn(`${siteUrl}/candidate-dashboard/credentials`, "View Credentials")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -308,7 +322,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
         html: wrap(`
           <h2 style="color: #1e3a5f;">Credential Intake Submitted</h2>
           <p>Candidate <strong>${name}</strong> (${email}) has submitted their credential intake sheet.</p>
-          ${btn("https://hyrind.com/admin-dashboard/candidates", "View Candidates")}
+          ${btn(`${siteUrl}/admin-dashboard/candidates`, "View Candidates")}
         `),
       };
 
@@ -320,7 +334,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <h1 style="color: #1e3a5f;">Interview Log Recorded</h1>
           <p>Hi ${name},</p>
           <p>Your interview log for <strong>${payload.company || ""}</strong> (${payload.role || ""}) has been recorded.</p>
-          ${btn("https://hyrind.com/candidate-dashboard/interviews", "View Interviews")}
+          ${btn(`${siteUrl}/candidate-dashboard/interviews`, "View Interviews")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -333,7 +347,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <h2 style="color: #1e3a5f;">Interview Log Submitted</h2>
           <p>Candidate <strong>${name}</strong> logged an interview at <strong>${payload.company || "N/A"}</strong> for <strong>${payload.role || "N/A"}</strong>.</p>
           <p>Outcome: ${payload.outcome || "Pending"}</p>
-          ${btn("https://hyrind.com/admin-dashboard/candidates", "View Candidates")}
+          ${btn(`${siteUrl}/admin-dashboard/candidates`, "View Candidates")}
         `),
       };
 
@@ -346,7 +360,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <p>Your assigned candidate <strong>${payload.candidate_name || "a candidate"}</strong> logged an interview at <strong>${payload.company || "N/A"}</strong> for <strong>${payload.role || "N/A"}</strong>.</p>
           <p>Outcome: ${payload.outcome || "Pending"}</p>
           ${payload.support_needed === "true" ? `<p style="color: #c0392b;"><strong>⚠ Support requested</strong>: ${payload.support_notes || ""}</p>` : ""}
-          ${btn("https://hyrind.com/recruiter-dashboard", "View Dashboard")}
+          ${btn(`${siteUrl}/recruiter-dashboard`, "View Dashboard")}
         `),
       };
 
@@ -359,7 +373,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <h1 style="color: #1e3a5f;">New Candidate Assignment</h1>
           <p>Hi ${name},</p>
           <p>You have been assigned as <strong>${payload.role_type?.replace(/_/g, " ") || "recruiter"}</strong> for candidate <strong>${payload.candidate_name || ""}</strong>.</p>
-          ${btn("https://hyrind.com/recruiter-dashboard", "View Dashboard")}
+          ${btn(`${siteUrl}/recruiter-dashboard`, "View Dashboard")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -372,7 +386,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
         html: wrap(`
           <h2 style="color: #1e3a5f;">Daily Submission Log Added</h2>
           <p>Recruiter <strong>${payload.recruiter_name || "N/A"}</strong> submitted <strong>${payload.count || "0"}</strong> applications for candidate <strong>${payload.candidate_name || "N/A"}</strong>.</p>
-          ${btn("https://hyrind.com/admin-dashboard", "View Dashboard")}
+          ${btn(`${siteUrl}/admin-dashboard`, "View Dashboard")}
         `),
       };
 
@@ -386,7 +400,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <p>Hi ${name},</p>
           <p>A monthly subscription of <strong>$${payload.amount || "0"}</strong> has been set up for your account.</p>
           <p>Your next charge date is: <strong>${payload.next_charge_date || "N/A"}</strong></p>
-          ${btn("https://hyrind.com/candidate-dashboard/billing", "View Billing")}
+          ${btn(`${siteUrl}/candidate-dashboard/billing`, "View Billing")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -426,7 +440,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <p>Hi ${name},</p>
           <p>We were unable to process your subscription payment${payload.reason ? `: ${payload.reason}` : ""}.</p>
           ${payload.grace_end ? `<p>Grace period ends: <strong>${payload.grace_end}</strong></p>` : ""}
-          ${btn("https://hyrind.com/candidate-dashboard/billing", "Update Payment", "#c0392b")}
+          ${btn(`${siteUrl}/candidate-dashboard/billing`, "Update Payment", "#c0392b")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -439,7 +453,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <h1 style="color: #c0392b;">Subscription Past Due</h1>
           <p>Hi ${name},</p>
           <p>Your subscription is past due. Grace period ends on <strong>${payload.grace_period_ends_at || "N/A"}</strong>.</p>
-          ${btn("https://hyrind.com/candidate-dashboard/billing", "Update Payment", "#c0392b")}
+          ${btn(`${siteUrl}/candidate-dashboard/billing`, "Update Payment", "#c0392b")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -452,7 +466,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <h1 style="color: #c0392b;">Marketing Services Paused</h1>
           <p>Hi ${name},</p>
           <p>Your marketing services have been paused due to non-payment. Please update your payment method and contact support to resume.</p>
-          ${btn("https://hyrind.com/candidate-dashboard/billing", "View Billing", "#c0392b")}
+          ${btn(`${siteUrl}/candidate-dashboard/billing`, "View Billing", "#c0392b")}
           <p>Best regards,<br/>The HYRIND Team</p>
         `),
       };
@@ -492,7 +506,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
           <h2 style="color: #c0392b;">Subscription Payment Failed</h2>
           <p>Candidate <strong>${name}</strong> (${email}) — Amount: $${payload.amount || "0"}</p>
           ${payload.reason ? `<p>Reason: ${payload.reason}</p>` : ""}
-          <p><a href="https://hyrind.com/admin-dashboard">View in Admin Dashboard</a></p>
+          <p><a href="${siteUrl}/admin-dashboard">View in Admin Dashboard</a></p>
         `),
       };
 
@@ -503,7 +517,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
         html: wrap(`
           <h2 style="color: #c0392b;">Subscription Paused</h2>
           <p>Candidate <strong>${name}</strong> (${email}) has been paused due to non-payment.</p>
-          <p><a href="https://hyrind.com/admin-dashboard">View in Admin Dashboard</a></p>
+          <p><a href="${siteUrl}/admin-dashboard">View in Admin Dashboard</a></p>
         `),
       };
 
@@ -514,7 +528,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
         html: wrap(`
           <h2 style="color: #1e3a5f;">New Subscription Created</h2>
           <p>A subscription of <strong>$${payload.amount || "0"}/mo</strong> has been created for candidate <strong>${name}</strong> (${email}).</p>
-          <p><a href="https://hyrind.com/admin-dashboard">View in Admin Dashboard</a></p>
+          <p><a href="${siteUrl}/admin-dashboard">View in Admin Dashboard</a></p>
         `),
       };
 
@@ -525,7 +539,7 @@ function buildEmail(type: EmailType, payload: Record<string, string>): { subject
         html: wrap(`
           <h2 style="color: #1e3a5f;">Subscription Cancelled</h2>
           <p>Candidate <strong>${name}</strong> (${email}) has had their subscription cancelled.</p>
-          <p><a href="https://hyrind.com/admin-dashboard">View in Admin Dashboard</a></p>
+          <p><a href="${siteUrl}/admin-dashboard">View in Admin Dashboard</a></p>
         `),
       };
 
@@ -572,7 +586,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const email = buildEmail(type, payload);
+    const siteUrl = await getSiteUrl(req);
+    const email = buildEmail(type, payload, siteUrl);
     if (!email) {
       return new Response(JSON.stringify({ error: "Unknown email type" }), {
         status: 400,
