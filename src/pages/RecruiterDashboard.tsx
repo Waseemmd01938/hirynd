@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { recruitersApi } from "@/services/api";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import StatusBadge from "@/components/dashboard/StatusBadge";
 import RecruiterCandidateDetail from "@/pages/recruiter/RecruiterCandidateDetail";
@@ -27,40 +27,17 @@ const RecruiterDashboard = () => {
   useEffect(() => {
     if (!user) return;
     const fetchCandidates = async () => {
-      const { data: assignments } = await supabase
-        .from("candidate_assignments")
-        .select("candidate_id, role_type")
-        .eq("recruiter_id", user.id)
-        .eq("is_active", true);
-
-      if (assignments && assignments.length > 0) {
-        const candidateIds = assignments.map((a: any) => a.candidate_id);
-        const { data: cands } = await supabase
-          .from("candidates")
-          .select("id, status, user_id")
-          .in("id", candidateIds);
-
-        if (cands) {
-          const userIds = cands.map((c: any) => c.user_id);
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("user_id, full_name, email")
-            .in("user_id", userIds);
-
-          const merged = cands.map((c: any) => ({
-            ...c,
-            profile: profiles?.find((p: any) => p.user_id === c.user_id),
-            assignment: assignments.find((a: any) => a.candidate_id === c.id),
-          }));
-          setCandidates(merged);
-        }
+      try {
+        const { data } = await recruitersApi.myCandidates();
+        setCandidates(data || []);
+      } catch {
+        setCandidates([]);
       }
       setLoading(false);
     };
     fetchCandidates();
   }, [user]);
 
-  // Sub-routing for candidate detail
   const subPath = location.pathname.replace("/recruiter-dashboard", "").replace(/^\//, "");
   if (subPath.startsWith("candidates/")) {
     const candidateId = subPath.replace("candidates/", "");
@@ -94,7 +71,6 @@ const RecruiterDashboard = () => {
                     <TableHead className="text-xs font-semibold">Name</TableHead>
                     <TableHead className="text-xs font-semibold">Email</TableHead>
                     <TableHead className="text-xs font-semibold">Status</TableHead>
-                    <TableHead className="text-xs font-semibold">Designation</TableHead>
                     <TableHead className="text-xs font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -107,10 +83,9 @@ const RecruiterDashboard = () => {
                       transition={{ delay: i * 0.03 }}
                       className="border-b border-border hover:bg-muted/20 transition-colors"
                     >
-                      <TableCell className="font-medium text-sm">{c.profile?.full_name || "—"}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{c.profile?.email || "—"}</TableCell>
+                      <TableCell className="font-medium text-sm">{c.full_name || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{c.email || "—"}</TableCell>
                       <TableCell><StatusBadge status={c.status} /></TableCell>
-                      <TableCell className="capitalize text-sm">{c.assignment?.role_type?.replace(/_/g, " ")}</TableCell>
                       <TableCell>
                         <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => navigate(`/recruiter-dashboard/candidates/${c.id}`)}>
                           <Eye className="mr-1 h-3.5 w-3.5" /> View

@@ -22,7 +22,7 @@ const AdminLogin = () => {
     const { error } = await signIn(email, password);
     setSubmitting(false);
     if (error) {
-      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      toast({ title: "Login failed", description: typeof error === 'string' ? error : 'Invalid credentials', variant: "destructive" });
     } else {
       navigate("/admin-dashboard");
     }

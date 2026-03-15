@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { user, loading, hasRole, approvalStatus } = useAuth();
+  const { user, loading, hasRole } = useAuth();
 
   if (loading) {
     return (
@@ -20,12 +20,13 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (!user) {
-    const loginPath = requiredRole === "admin" ? "/admin-login" : requiredRole === "recruiter" ? "/recruiter-login" : "/candidate-login";
+    const loginPath = requiredRole === "admin" ? "/admin-login"
+      : requiredRole === "recruiter" ? "/recruiter-login"
+      : "/candidate-login";
     return <Navigate to={loginPath} replace />;
   }
 
-  // Admins bypass approval check
-  if (requiredRole !== "admin" && approvalStatus !== "approved") {
+  if (user.approval_status !== "approved" && user.role !== "admin") {
     const loginPath = requiredRole === "recruiter" ? "/recruiter-login" : "/candidate-login";
     return <Navigate to={loginPath} replace />;
   }

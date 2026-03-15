@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { authApi } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,12 +9,15 @@ import { CheckCircle2, XCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
 
 interface PendingUser {
-  user_id: string;
-  full_name: string;
+  id: string;
   email: string;
-  phone: string;
+  role: string;
+  approval_status: string;
   created_at: string;
-  roles: string[];
+  profile?: {
+    full_name: string;
+    phone: string | null;
+  };
 }
 
 const AdminApprovalsPage = () => {
@@ -25,34 +28,25 @@ const AdminApprovalsPage = () => {
 
   const fetchPending = async () => {
     setLoading(true);
-    const { data, error } = await supabase.rpc("admin_get_pending_approvals");
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setPending((data as any[]) || []);
+    try {
+      const { data } = await authApi.pendingApprovals();
+      setPending(data || []);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     }
     setLoading(false);
   };
 
   useEffect(() => { fetchPending(); }, []);
 
-  const handleAction = async (userId: string, action: "approved" | "rejected", userName: string, userEmail: string) => {
+  const handleAction = async (userId: string, action: "approved" | "rejected") => {
     setProcessing(userId);
-    const { error } = await supabase.rpc("admin_approve_user", {
-      _user_id: userId,
-      _action: action,
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      // Send email notification
-      const emailType = action === "approved" ? "approval_granted" : "approval_rejected";
-      supabase.functions.invoke("send-transactional-email", {
-        body: { type: emailType, payload: { name: userName, email: userEmail } },
-      }).catch(() => {});
-
+    try {
+      await authApi.approveUser(userId, action);
       toast({ title: action === "approved" ? "User Approved" : "User Rejected" });
       fetchPending();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     }
     setProcessing(null);
   };
@@ -83,32 +77,20 @@ const AdminApprovalsPage = () => {
             </TableHeader>
             <TableBody>
               {pending.map((u) => (
-                <TableRow key={u.user_id}>
-                  <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
+                <TableRow key={u.id}>
+                  <TableCell className="font-medium">{u.profile?.full_name || "—"}</TableCell>
                   <TableCell>{u.email}</TableCell>
-                  <TableCell>{u.phone || "—"}</TableCell>
-                  <TableCell>
-                    {u.roles?.map((r) => (
-                      <Badge key={r} variant="secondary" className="mr-1">{r}</Badge>
-                    ))}
-                  </TableCell>
+                  <TableCell>{u.profile?.phone || "—"}</TableCell>
+                  <TableCell><Badge variant="secondary">{u.role}</Badge></TableCell>
                   <TableCell>{format(new Date(u.created_at), "MMM d, yyyy")}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="default"
-                        disabled={processing === u.user_id}
-                        onClick={() => handleAction(u.user_id, "approved", u.full_name, u.email)}
-                      >
+                      <Button size="sm" variant="default" disabled={processing === u.id}
+                        onClick={() => handleAction(u.id, "approved")}>
                         <CheckCircle2 className="mr-1 h-4 w-4" /> Approve
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        disabled={processing === u.user_id}
-                        onClick={() => handleAction(u.user_id, "rejected", u.full_name, u.email)}
-                      >
+                      <Button size="sm" variant="destructive" disabled={processing === u.id}
+                        onClick={() => handleAction(u.id, "rejected")}>
                         <XCircle className="mr-1 h-4 w-4" /> Reject
                       </Button>
                     </div>

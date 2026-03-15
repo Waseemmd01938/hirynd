@@ -1,125 +1,107 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+import { authApi } from "@/services/api";
 
-type AppRole = "candidate" | "recruiter" | "admin";
+type AppRole = "candidate" | "recruiter" | "team_lead" | "team_manager" | "admin" | "finance_admin";
+
+interface UserData {
+  id: string;
+  email: string;
+  role: AppRole;
+  approval_status: string;
+  created_at: string;
+  profile?: {
+    id: string;
+    full_name: string;
+    phone: string | null;
+    avatar_url: string | null;
+  };
+}
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  roles: AppRole[];
+  user: UserData | null;
   loading: boolean;
-  approvalStatus: string | null;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, role?: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any; approval_status?: string }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [roles, setRoles] = useState<AppRole[]>([]);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
 
-  const fetchRoles = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-      if (error) console.error("Failed to fetch roles:", error.message);
-      setRoles((data || []).map((r: any) => r.role as AppRole));
-    } catch (e) {
-      console.error("Exception fetching roles:", e);
-      setRoles([]);
+  const fetchUser = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
     }
-  };
-
-  const fetchApprovalStatus = async (userId: string, retry = true) => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("approval_status")
-        .eq("user_id", userId)
-        .single();
-      if (error) {
-        console.error("Failed to fetch approval status:", error.message);
-        // Retry once after a short delay
-        if (retry) {
-          await new Promise(r => setTimeout(r, 1000));
-          return fetchApprovalStatus(userId, false);
-        }
-      }
-      setApprovalStatus(data?.approval_status || "pending_approval");
-    } catch (e) {
-      console.error("Exception fetching approval status:", e);
-      setApprovalStatus("pending_approval");
+      const { data } = await authApi.me();
+      setUser(data);
+    } catch {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      setUser(null);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          setTimeout(() => {
-            fetchRoles(session.user.id);
-            fetchApprovalStatus(session.user.id);
-          }, 0);
-        } else {
-          setRoles([]);
-          setApprovalStatus(null);
-        }
-        setLoading(false);
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchRoles(session.user.id);
-        fetchApprovalStatus(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    fetchUser();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { full_name: fullName },
-      },
-    });
-    if (error) return { error };
-    return { error: null };
+  const signUp = async (email: string, password: string, fullName: string, role = "candidate") => {
+    try {
+      await authApi.register({ email, password, full_name: fullName, role });
+      return { error: null };
+    } catch (err: any) {
+      return { error: err.response?.data || err.message };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    try {
+      const { data } = await authApi.login(email, password);
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
+      setUser(data.user);
+      return { error: null };
+    } catch (err: any) {
+      const errData = err.response?.data;
+      if (err.response?.status === 403) {
+        return { error: errData?.error || "Account not approved", approval_status: errData?.approval_status };
+      }
+      return { error: errData?.error || err.message };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setRoles([]);
-    setApprovalStatus(null);
+    try {
+      await authApi.logout();
+    } catch { /* ignore */ }
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    setUser(null);
   };
 
-  const hasRole = (role: AppRole) => roles.includes(role);
+  const hasRole = (role: AppRole) => {
+    if (!user) return false;
+    // Admin can access everything
+    if (user.role === "admin") return true;
+    // Team manager can access recruiter views
+    if (role === "recruiter" && user.role in ["recruiter", "team_lead", "team_manager"]) return true;
+    return user.role === role;
+  };
+
+  const refreshUser = fetchUser;
 
   return (
-    <AuthContext.Provider value={{ user, session, roles, loading, approvalStatus, signUp, signIn, signOut, hasRole }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut, hasRole, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
