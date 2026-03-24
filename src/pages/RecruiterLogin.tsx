@@ -101,7 +101,18 @@ const RecruiterLogin = () => {
       await authApi.register({ ...reg, role: "recruiter" } as any);
       setRegistrationComplete(true);
     } catch (err: any) {
-      toast({ title: "Registration failed", description: err.response?.data?.email?.[0] || "Registration error", variant: "destructive" });
+      let msg = "Something went wrong";
+      const error = err.response?.data;
+      if (typeof error === "string") {
+        msg = error;
+      } else if (error) {
+        const firstKey = Object.keys(error)[0];
+        if (firstKey) {
+          const firstErr = error[firstKey];
+          msg = Array.isArray(firstErr) ? `${firstKey}: ${firstErr[0]}` : String(firstErr);
+        }
+      }
+      toast({ title: "Registration failed", description: msg, variant: "destructive" });
     }
     setSubmitting(false);
   };

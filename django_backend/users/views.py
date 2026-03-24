@@ -29,7 +29,12 @@ def register(request):
         }, status=status.HTTP_429_TOO_MANY_REQUESTS)
 
     serializer = RegisterSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
+    if not serializer.is_valid():
+        import logging
+        logger = logging.getLogger('django')
+        logger.error("Registration validation errors: %s", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     user = serializer.save()
 
     log_action(

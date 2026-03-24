@@ -95,7 +95,17 @@ const CandidateLogin = () => {
     const { error } = await signUp(reg);
     setSubmitting(false);
     if (error) {
-      const msg = typeof error === "string" ? error : (error.error || error.detail || "Something went wrong");
+      let msg = "Something went wrong";
+      if (typeof error === "string") {
+        msg = error;
+      } else {
+        // Handle DRF validation error object
+        const firstKey = Object.keys(error)[0];
+        if (firstKey) {
+          const firstErr = error[firstKey];
+          msg = Array.isArray(firstErr) ? `${firstKey}: ${firstErr[0]}` : String(firstErr);
+        }
+      }
       toast({ title: "Registration failed", description: msg, variant: "destructive" });
     } else {
       setRegistrationComplete(true);
