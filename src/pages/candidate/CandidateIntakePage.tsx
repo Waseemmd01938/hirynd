@@ -9,12 +9,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, FileText } from "lucide-react";
+import { Lock, FileText, LayoutDashboard, Briefcase, KeyRound, DollarSign, CreditCard, ClipboardList, Phone, UserPlus, MessageSquare, Settings } from "lucide-react";
 
 const CANDIDATE_NAV = [
-  { label: "Overview", path: "/candidate-dashboard", icon: <span className="h-4 w-4">📋</span> },
-  { label: "Intake Form", path: "/candidate-dashboard/intake", icon: <FileText className="h-4 w-4" /> },
-  { label: "Roles", path: "/candidate-dashboard/roles", icon: <span className="h-4 w-4">💼</span> },
+  { label: "Overview", path: "/candidate-dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+  { label: "Intake Sheet", path: "/candidate-dashboard/intake", icon: <FileText className="h-4 w-4" /> },
+  { label: "Roles", path: "/candidate-dashboard/roles", icon: <Briefcase className="h-4 w-4" /> },
+  { label: "Credentials", path: "/candidate-dashboard/credentials", icon: <KeyRound className="h-4 w-4" /> },
+  { label: "Payments", path: "/candidate-dashboard/payments", icon: <DollarSign className="h-4 w-4" /> },
+  { label: "Billing", path: "/candidate-dashboard/billing", icon: <CreditCard className="h-4 w-4" /> },
+  { label: "Applications", path: "/candidate-dashboard/applications", icon: <ClipboardList className="h-4 w-4" /> },
+  { label: "Interviews", path: "/candidate-dashboard/interviews", icon: <Phone className="h-4 w-4" /> },
+  { label: "Referral", path: "/candidate-dashboard/referrals", icon: <UserPlus className="h-4 w-4" /> },
+  { label: "Messages", path: "/candidate-dashboard/messages", icon: <MessageSquare className="h-4 w-4" /> },
+  { label: "Settings", path: "/candidate-dashboard/settings", icon: <Settings className="h-4 w-4" /> },
 ];
 
 interface CandidateIntakePageProps {
@@ -121,9 +129,13 @@ const CandidateIntakePage = ({ candidate, onStatusChange }: CandidateIntakePageP
     fetchIntake();
   }, [candidate?.id, user?.email]);
 
-  const statusAllowed = ["approved", "intake_submitted", "roles_suggested", "roles_confirmed", "paid", "credential_completed", "active_marketing", "placed", "on_hold", "paused", "past_due"].includes(candidate?.status);
+  const statusAllowed = [
+    "approved", "intake_submitted", "roles_published", "roles_suggested", "roles_confirmed", 
+    "payment_completed", "paid", "credentials_submitted", "credential_completed", 
+    "active_marketing", "placed_closed", "placed", "on_hold", "paused", "past_due"
+  ].includes(candidate?.status);
   const isLocked = intake?.is_locked === true;
-  const canSubmit = (["approved", "lead", "on_boarding"].includes(candidate?.status) || (candidate?.status === "intake_submitted" && !isLocked)) && !isLocked;
+  const canSubmit = (["approved", "lead", "on_boarding", "roles_published"].includes(candidate?.status) || (candidate?.status === "intake_submitted" && !isLocked)) && !isLocked;
 
   if (!statusAllowed) {
     return (

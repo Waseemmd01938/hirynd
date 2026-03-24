@@ -196,6 +196,9 @@ const CandidateDashboard = () => {
       case "roles_confirmed":   return { label: "View Payments →", path: "/candidate-dashboard/payments" };
       case "payment_completed": return { label: "Complete Credential Intake →", path: "/candidate-dashboard/credentials" };
       case "active_marketing":  return { label: "View Applications →", path: "/candidate-dashboard/applications" };
+      case "credentials_submitted": 
+      case "credential_completed":
+        return { label: "Review Credentials →", path: "/candidate-dashboard/credentials" };
       case "past_due":          return { label: "Update Billing →", path: "/candidate-dashboard/billing" };
       default: return null;
     }

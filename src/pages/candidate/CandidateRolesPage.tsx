@@ -6,15 +6,23 @@ import StatusBadge from "@/components/dashboard/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Briefcase, Check, X, MessageSquare, Plus } from "lucide-react";
+import { Lock, Briefcase, Check, X, MessageSquare, Plus, LayoutDashboard, FileText, KeyRound, DollarSign, CreditCard, ClipboardList, Phone, UserPlus, Settings } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 
 const CANDIDATE_NAV = [
-  { label: "Overview", path: "/candidate-dashboard", icon: <span className="h-4 w-4">📋</span> },
-  { label: "Intake Form", path: "/candidate-dashboard/intake", icon: <span className="h-4 w-4">📄</span> },
+  { label: "Overview", path: "/candidate-dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+  { label: "Intake Sheet", path: "/candidate-dashboard/intake", icon: <FileText className="h-4 w-4" /> },
   { label: "Roles", path: "/candidate-dashboard/roles", icon: <Briefcase className="h-4 w-4" /> },
+  { label: "Credentials", path: "/candidate-dashboard/credentials", icon: <KeyRound className="h-4 w-4" /> },
+  { label: "Payments", path: "/candidate-dashboard/payments", icon: <DollarSign className="h-4 w-4" /> },
+  { label: "Billing", path: "/candidate-dashboard/billing", icon: <CreditCard className="h-4 w-4" /> },
+  { label: "Applications", path: "/candidate-dashboard/applications", icon: <ClipboardList className="h-4 w-4" /> },
+  { label: "Interviews", path: "/candidate-dashboard/interviews", icon: <Phone className="h-4 w-4" /> },
+  { label: "Referral", path: "/candidate-dashboard/referrals", icon: <UserPlus className="h-4 w-4" /> },
+  { label: "Messages", path: "/candidate-dashboard/messages", icon: <MessageSquare className="h-4 w-4" /> },
+  { label: "Settings", path: "/candidate-dashboard/settings", icon: <Settings className="h-4 w-4" /> },
 ];
 
 interface CandidateRolesPageProps {
@@ -32,8 +40,11 @@ const CandidateRolesPage = ({ candidate, onStatusChange }: CandidateRolesPagePro
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [customRole, setCustomRole] = useState({ title: "", reason: "" });
 
-  const canConfirm = candidate?.status === "roles_suggested";
-  const isConfirmed = ["roles_confirmed", "paid", "credential_completed", "active_marketing", "placed"].includes(candidate?.status);
+  const canConfirm = ["roles_suggested", "roles_published"].includes(candidate?.status);
+  const isConfirmed = [
+    "roles_confirmed", "payment_completed", "paid", "credentials_submitted",
+    "credential_completed", "active_marketing", "placed_closed", "placed"
+  ].includes(candidate?.status);
 
   useEffect(() => {
     if (!candidate) return;
@@ -55,9 +66,12 @@ const CandidateRolesPage = ({ candidate, onStatusChange }: CandidateRolesPagePro
       setLoading(false);
     };
     fetchRoles();
-  }, [candidate]);
+  }, [candidate?.id]); // Also updated to depend on candidate.id
 
-  const statusAllowed = ["roles_suggested", "roles_confirmed", "paid", "credential_completed", "active_marketing", "placed"].includes(candidate?.status);
+  const statusAllowed = [
+    "roles_suggested", "roles_published", "roles_confirmed", "payment_completed", "paid", 
+    "credentials_submitted", "credential_completed", "active_marketing", "placed_closed", "placed"
+  ].includes(candidate?.status);
 
   if (!statusAllowed) {
     return (

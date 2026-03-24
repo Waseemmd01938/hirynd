@@ -200,7 +200,7 @@ def confirm_roles(request, candidate_id):
         )
 
     candidate = Candidate.objects.get(id=candidate_id)
-    if candidate.status == 'roles_suggested':
+    if candidate.status in ('roles_suggested', 'roles_published'):
         candidate.status = 'roles_confirmed'
         candidate.save()
     return Response({'message': 'Roles confirmed'})

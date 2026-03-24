@@ -81,8 +81,8 @@ export const candidatesApi = {
   reopenRoles: (id: string) => api.post(`/candidates/${id}/roles/reopen/`),
   addRole: (id: string, data: { role_title: string; description?: string; admin_note?: string }) =>
     api.post(`/candidates/${id}/roles/add/`, data),
-  confirmRoles: (id: string, decisions: Record<string, any>) =>
-    api.post(`/candidates/${id}/roles/confirm/`, { decisions }),
+  confirmRoles: (id: string, data: Record<string, any>) =>
+    api.post(`/candidates/${id}/roles/confirm/`, data),
   getCredentials: (id: string) => api.get(`/candidates/${id}/credentials/`),
   upsertCredential: (id: string, data: Record<string, any>) =>
     api.post(`/candidates/${id}/credentials/upsert/`, { data }),
