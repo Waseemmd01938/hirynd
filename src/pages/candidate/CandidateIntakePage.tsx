@@ -37,7 +37,7 @@ const CandidateIntakePage = ({ candidate, onStatusChange }: CandidateIntakePageP
     date_of_birth: "",
     phone_number: "",
     alternate_phone: "",
-    email: "",
+    email: user?.email || "",
     current_address: "",
     city: "",
     state: "",
@@ -87,19 +87,43 @@ const CandidateIntakePage = ({ candidate, onStatusChange }: CandidateIntakePageP
         const { data } = await candidatesApi.getIntake(candidate.id);
         if (data && data.id) {
           setIntake(data);
-          // data stored as JSON in data.data field
           const saved = data.data || {};
-          setFormData(prev => ({ ...prev, ...saved }));
+          
+          // Map backend simplified keys to frontend detailed keys
+          const mappedData: any = { ...saved };
+          
+          if (saved.full_name && !saved.first_name) {
+            const parts = saved.full_name.split(" ");
+            mappedData.first_name = parts[0] || "";
+            mappedData.last_name = parts.slice(1).join(" ") || "";
+          }
+          if (saved.phone && !saved.phone_number) mappedData.phone_number = saved.phone;
+          if (saved.university && !saved.university_name) mappedData.university_name = saved.university;
+          if (saved.graduation_year && !saved.graduation_date) mappedData.graduation_date = saved.graduation_year;
+          if (saved.visa_status && !saved.visa_type) mappedData.visa_type = saved.visa_status;
+          if (saved.years_experience && !saved.years_of_experience) mappedData.years_of_experience = saved.years_experience;
+          if (saved.target_locations && !saved.preferred_locations) mappedData.preferred_locations = saved.target_locations;
+          if (saved.current_employer && !saved.recent_employer) mappedData.recent_employer = saved.current_employer;
+          if (saved.skills && !saved.technologies_or_skills) mappedData.technologies_or_skills = saved.skills;
+          if (saved.notes && !saved.additional_notes) mappedData.additional_notes = saved.notes;
+
+          setFormData(prev => ({ 
+            ...prev, 
+            ...mappedData,
+            email: saved.email || user?.email || prev.email // Keep existing or user email
+          }));
         }
-      } catch { /* no intake yet */ }
+      } catch (err) {
+        console.error("No intake found or fetch error:", err);
+      }
       setLoading(false);
     };
     fetchIntake();
-  }, [candidate?.id]);
+  }, [candidate?.id, user?.email]);
 
   const statusAllowed = ["approved", "intake_submitted", "roles_suggested", "roles_confirmed", "paid", "credential_completed", "active_marketing", "placed", "on_hold", "paused", "past_due"].includes(candidate?.status);
   const isLocked = intake?.is_locked === true;
-  const canSubmit = ["approved", "lead"].includes(candidate?.status) && !isLocked;
+  const canSubmit = (["approved", "lead", "on_boarding"].includes(candidate?.status) || (candidate?.status === "intake_submitted" && !isLocked)) && !isLocked;
 
   if (!statusAllowed) {
     return (

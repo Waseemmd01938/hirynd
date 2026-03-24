@@ -107,7 +107,7 @@ def update_candidate_status(request, candidate_id):
 @permission_classes([IsApproved])
 def intake(request, candidate_id):
     try:
-        candidate = Candidate.objects.get(id=candidate_id)
+        candidate = Candidate.objects.select_related('user__profile').get(id=candidate_id)
     except Candidate.DoesNotExist:
         return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -116,7 +116,22 @@ def intake(request, candidate_id):
             intake = ClientIntake.objects.get(candidate=candidate)
             return Response(ClientIntakeSerializer(intake).data)
         except ClientIntake.DoesNotExist:
-            return Response({})
+            # Fallback: Pre-populate from Candidate + User Profile for initial form load
+            initial_data = {
+                'full_name': candidate.user.profile.full_name,
+                'phone': candidate.user.profile.phone,
+                'email': candidate.user.email,
+                'university': candidate.university,
+                'major': candidate.major,
+                'degree': candidate.degree,
+                'graduation_year': candidate.graduation_year or (str(candidate.graduation_date.year) if candidate.graduation_date else ""),
+                'visa_status': candidate.visa_status,
+                'linkedin_url': candidate.linkedin_url,
+                'portfolio_url': candidate.portfolio_url,
+                'current_location': candidate.current_location,
+                'notes': candidate.notes,
+            }
+            return Response({'candidate': str(candidate_id), 'data': initial_data, 'is_locked': False})
 
     # Check lock
     try:
