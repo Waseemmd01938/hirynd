@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { authApi } from "@/services/api";
-import { Clock, XCircle, Eye, EyeOff } from "lucide-react";
+import { Clock, XCircle } from "lucide-react";
+import PasswordField from "@/components/auth/PasswordField";
 
 const SOURCE_OPTIONS = ["LinkedIn", "Google", "University", "Friend", "Social Media", "Other"];
 const WORK_TYPE_OPTIONS = ["Full-time", "Part-time", "Contract", "Remote"];
@@ -98,20 +99,7 @@ const RecruiterLogin = () => {
     setSubmitting(false);
   };
 
-  const PasswordField = ({ label, value, onChange, show, onToggle, error }: {
-    label: string; value: string; onChange: (v: string) => void; show: boolean; onToggle: () => void; error?: string;
-  }) => (
-    <div>
-      <Label>{label}</Label>
-      <div className="relative">
-        <Input type={show ? "text" : "password"} value={value} onChange={e => onChange(e.target.value)} required />
-        <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={onToggle}>
-          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </button>
-      </div>
-      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
-    </div>
-  );
+
 
   if (registrationComplete) {
     return (

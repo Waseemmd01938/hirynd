@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, XCircle, Eye, EyeOff } from "lucide-react";
+import { Clock, XCircle } from "lucide-react";
+import PasswordField from "@/components/auth/PasswordField";
 
 const SOURCE_OPTIONS = ["LinkedIn", "Google", "University", "Friend", "Social Media", "Other"];
 const VISA_OPTIONS = ["H1B", "OPT", "CPT", "Green Card", "US Citizen", "EAD", "TN", "Other"];
@@ -171,21 +172,6 @@ const CandidateLogin = () => {
       </div>
     );
   }
-
-  const PasswordField = ({ label, value, onChange, show, onToggle, error }: {
-    label: string; value: string; onChange: (v: string) => void; show: boolean; onToggle: () => void; error?: string;
-  }) => (
-    <div>
-      <Label>{label}</Label>
-      <div className="relative">
-        <Input type={show ? "text" : "password"} value={value} onChange={e => onChange(e.target.value)} required />
-        <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" onClick={onToggle}>
-          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </button>
-      </div>
-      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-background">
