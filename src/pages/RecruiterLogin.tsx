@@ -24,7 +24,7 @@ const RecruiterLogin = () => {
   const [submitting, setSubmitting] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
-  const { signIn } = useAuth();
+  const { signIn, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -71,17 +71,24 @@ const RecruiterLogin = () => {
     e.preventDefault();
     setSubmitting(true);
     setApprovalStatus(null);
-    const { error, approval_status } = await signIn(loginEmail, loginPassword);
-    setSubmitting(false);
+    const { error, approval_status, user: loggedUser } = await signIn(loginEmail, loginPassword);
+    
     if (error) {
+      setSubmitting(false);
       if (approval_status === "pending") {
         setApprovalStatus("pending_approval");
       } else if (approval_status === "rejected") {
         setApprovalStatus("rejected");
       } else {
-        toast({ title: "Login failed", description: typeof error === "string" ? error : "Invalid credentials", variant: "destructive" });
+        const msg = typeof error === "string" ? error : (error.error || error.detail || "Invalid email or password.");
+        toast({ title: "Login failed", description: msg, variant: "destructive" });
       }
+    } else if (!["recruiter", "team_lead", "team_manager"].includes(loggedUser?.role || "")) {
+      await signOut();
+      setSubmitting(false);
+      toast({ title: "Access denied", description: "This account is not registered as recruitment staff.", variant: "destructive" });
     } else {
+      setSubmitting(false);
       navigate("/recruiter-dashboard");
     }
   };

@@ -15,7 +15,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -26,15 +26,22 @@ const AdminLogin = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = await signIn(email, password);
-    setSubmitting(false);
+    const { error, user: loggedUser } = await signIn(email, password);
+    
     if (error) {
+      setSubmitting(false);
+      const msg = typeof error === "string" ? error : (error.error || error.detail || "Invalid email or password.");
       toast({
         title: "Login failed",
-        description: typeof error === "string" ? error : "Invalid credentials or insufficient permissions.",
+        description: msg,
         variant: "destructive",
       });
+    } else if (loggedUser?.role !== "admin") {
+      await signOut();
+      setSubmitting(false);
+      toast({ title: "Access denied", description: "Insufficient permissions.", variant: "destructive" });
     } else {
+      setSubmitting(false);
       navigate("/admin-dashboard");
     }
   };

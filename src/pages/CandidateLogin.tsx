@@ -22,7 +22,7 @@ const CandidateLogin = () => {
   const [submitting, setSubmitting] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<string | null>(null);
-  const { signIn } = useAuth();
+  const { signIn, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -66,17 +66,24 @@ const CandidateLogin = () => {
     e.preventDefault();
     setSubmitting(true);
     setApprovalStatus(null);
-    const { error, approval_status } = await signIn(loginEmail, loginPassword);
-    setSubmitting(false);
+    const { error, approval_status, user: loggedUser } = await signIn(loginEmail, loginPassword);
+    
     if (error) {
+      setSubmitting(false);
       if (approval_status === "pending") {
         setApprovalStatus("pending_approval");
       } else if (approval_status === "rejected") {
         setApprovalStatus("rejected");
       } else {
-        toast({ title: "Login failed", description: typeof error === "string" ? error : "Invalid credentials", variant: "destructive" });
+        const msg = typeof error === "string" ? error : (error.error || error.detail || "Invalid email or password.");
+        toast({ title: "Login failed", description: msg, variant: "destructive" });
       }
+    } else if (loggedUser?.role !== "candidate") {
+      await signOut();
+      setSubmitting(false);
+      toast({ title: "Access denied", description: "This account is not registered as a candidate.", variant: "destructive" });
     } else {
+      setSubmitting(false);
       navigate("/candidate-dashboard");
     }
   };
@@ -88,7 +95,8 @@ const CandidateLogin = () => {
     const { error } = await signUp(reg);
     setSubmitting(false);
     if (error) {
-      toast({ title: "Registration failed", description: typeof error === "string" ? error : JSON.stringify(error), variant: "destructive" });
+      const msg = typeof error === "string" ? error : (error.error || error.detail || "Something went wrong");
+      toast({ title: "Registration failed", description: msg, variant: "destructive" });
     } else {
       setRegistrationComplete(true);
     }

@@ -353,9 +353,9 @@ def verify_razorpay_payment(request, candidate_id):
     candidate = rp_order.candidate
     if candidate.status in ('roles_confirmed', 'pending_payment', 'intake_submitted'):
         if candidate.credentials.exists():
-            candidate.status = 'credential_completed'
+            candidate.status = 'credentials_submitted'
         else:
-            candidate.status = 'paid'
+            candidate.status = 'payment_completed'
         candidate.save(update_fields=['status'])
 
     log_action(candidate.user, 'payment_verified', str(candidate_id), 'payment', {
@@ -408,9 +408,9 @@ def record_payment(request, candidate_id):
             cand = Candidate.objects.get(id=candidate_id)
             if cand.status in ('roles_confirmed', 'pending_payment', 'past_due'):
                 if cand.credentials.exists():
-                    cand.status = 'credential_completed'
+                    cand.status = 'credentials_submitted'
                 else:
-                    cand.status = 'paid'
+                    cand.status = 'payment_completed'
                 cand.save(update_fields=['status'])
         except Candidate.DoesNotExist:
             pass

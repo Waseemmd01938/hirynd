@@ -6,7 +6,7 @@ from django.utils import timezone
 from users.permissions import IsAdmin, IsApproved, IsRecruiter, IsCandidate
 from audit.utils import log_action
 from .models import (
-    Candidate, ClientIntake, RoleSuggestion, CredentialVersion,
+    Candidate, ClientIntake, RoleSuggestion, RoleConfirmation, CredentialVersion,
     Referral, InterviewLog, PlacementClosure, Payment,
 )
 from .serializers import (
@@ -163,11 +163,27 @@ def add_role(request, candidate_id):
 @api_view(['POST'])
 @permission_classes([IsCandidate])
 def confirm_roles(request, candidate_id):
-    decisions = request.data.get('decisions', {})
-    for role_id, confirmed in decisions.items():
+    payload = request.data
+    decisions = payload.get('decisions', {})
+    notes = payload.get('notes', {})
+    custom_role = payload.get('custom_role')
+    
+    for role_id, decision in decisions.items():
+        status_val = True if decision == 'accepted' else False if decision == 'declined' else None
         RoleSuggestion.objects.filter(id=role_id, candidate_id=candidate_id).update(
-            candidate_confirmed=confirmed, confirmed_at=timezone.now()
+            candidate_confirmed=status_val,
+            confirmed_at=timezone.now(),
+            change_request_note=notes.get(role_id, '') if decision == 'change_requested' else None
         )
+    
+    if custom_role and custom_role.get('title'):
+        RoleConfirmation.objects.create(
+            candidate_id=candidate_id,
+            response='change_requested',
+            custom_role_title=custom_role['title'],
+            custom_reason=custom_role['reason']
+        )
+
     candidate = Candidate.objects.get(id=candidate_id)
     if candidate.status == 'roles_suggested':
         candidate.status = 'roles_confirmed'
@@ -175,11 +191,42 @@ def confirm_roles(request, candidate_id):
     return Response({'message': 'Roles confirmed'})
 
 
+@api_view(['POST'])
+@permission_classes([IsAdmin])
+def reopen_intake(request, candidate_id):
+    try:
+        intake = ClientIntake.objects.get(candidate_id=candidate_id)
+        intake.is_locked = False
+        intake.save()
+        log_action(request.user, 'intake_reopened', str(candidate_id), 'intake', {})
+        return Response({'message': 'Intake reopened'})
+    except ClientIntake.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdmin])
+def reopen_roles(request, candidate_id):
+    try:
+        RoleSuggestion.objects.filter(candidate_id=candidate_id).update(
+            candidate_confirmed=None,
+            confirmed_at=None,
+            change_request_note=None
+        )
+        candidate = Candidate.objects.get(id=candidate_id)
+        candidate.status = 'intake_submitted'
+        candidate.save()
+        log_action(request.user, 'roles_reopened', str(candidate_id), 'roles', {})
+        return Response({'message': 'Roles reopened and status reset'})
+    except Candidate.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+
 # ─── Credentials ───
 
 @api_view(['GET'])
 @permission_classes([IsApproved])
-def credential_list(request, candidate_id):
+def credentials(request, candidate_id):
     versions = CredentialVersion.objects.filter(candidate_id=candidate_id).select_related('edited_by__profile')
     return Response(CredentialVersionSerializer(versions, many=True).data)
 
@@ -204,8 +251,8 @@ def upsert_credential(request, candidate_id):
         version=new_version,
     )
 
-    if candidate.status in ('paid', 'roles_confirmed', 'pending_payment'):
-        candidate.status = 'credential_completed'
+    if candidate.status in ('payment_completed', 'roles_confirmed', 'pending_payment'):
+        candidate.status = 'credentials_submitted'
         candidate.save(update_fields=['status'])
 
     log_action(request.user, 'credential_edit', str(candidate.id), 'credential', {'version': new_version})
@@ -314,6 +361,6 @@ def placement(request, candidate_id):
     serializer.is_valid(raise_exception=True)
     serializer.save()
 
-    Candidate.objects.filter(id=candidate_id).update(status='placed')
+    Candidate.objects.filter(id=candidate_id).update(status='placed_closed')
     log_action(request.user, 'placement_closed', str(candidate_id), 'candidate', data)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
