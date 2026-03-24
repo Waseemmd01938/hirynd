@@ -187,15 +187,28 @@ def credential_list(request, candidate_id):
 @api_view(['POST'])
 @permission_classes([IsApproved])
 def upsert_credential(request, candidate_id):
-    last_version = CredentialVersion.objects.filter(candidate_id=candidate_id).order_by('-version').first()
+    try:
+        candidate = Candidate.objects.get(id=candidate_id)
+    except Candidate.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Accept both { data: {...} } and flat submission
+    payload = request.data.get('data') if 'data' in request.data else request.data
+
+    last_version = CredentialVersion.objects.filter(candidate=candidate).order_by('-version').first()
     new_version = (last_version.version + 1) if last_version else 1
     cred = CredentialVersion.objects.create(
-        candidate_id=candidate_id,
-        data=request.data.get('data', {}),
+        candidate=candidate,
+        data=payload,
         edited_by=request.user,
         version=new_version,
     )
-    log_action(request.user, 'credential_edit', str(candidate_id), 'credential', {'version': new_version})
+
+    if candidate.status in ('paid', 'roles_confirmed', 'pending_payment'):
+        candidate.status = 'credential_completed'
+        candidate.save(update_fields=['status'])
+
+    log_action(request.user, 'credential_edit', str(candidate.id), 'credential', {'version': new_version})
     return Response(CredentialVersionSerializer(cred).data, status=status.HTTP_201_CREATED)
 
 

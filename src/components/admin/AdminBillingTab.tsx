@@ -67,10 +67,11 @@ const AdminBillingTab = ({ candidateId, onRefresh }: AdminBillingTabProps) => {
         billingApi.invoices(candidateId).catch(() => ({ data: [] })),
         billingApi.payments(candidateId).catch(() => ({ data: [] })),
       ]);
-      setSubscription(subRes.data);
+      const hasSub = subRes.data && Object.keys(subRes.data).length > 0;
+      setSubscription(hasSub ? subRes.data : null);
       setInvoices(invRes.data || []);
       setPayments(payRes.data || []);
-      if (subRes.data) {
+      if (hasSub) {
         setFormAmount(String(subRes.data.amount));
         setFormStatus(subRes.data.status);
         setFormGraceDays(String(subRes.data.grace_days || 5));
@@ -179,7 +180,7 @@ const AdminBillingTab = ({ candidateId, onRefresh }: AdminBillingTabProps) => {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-4 pb-4 border-b border-border">
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
-                <Badge className={statusBadgeClass[subscription.status] || ""}>{subscription.status.replace(/_/g, " ").toUpperCase()}</Badge>
+                <Badge className={statusBadgeClass[subscription.status] || ""}>{subscription.status?.replace(/_/g, " ").toUpperCase() || "UNKNOWN"}</Badge>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Amount</p>

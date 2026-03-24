@@ -1,4 +1,4 @@
-﻿"""
+"""
 Billing views  Razorpay integration, subscription-plan management,
 per-candidate subscription lifecycle, and payment verification.
 """
@@ -352,7 +352,10 @@ def verify_razorpay_payment(request, candidate_id):
 
     candidate = rp_order.candidate
     if candidate.status in ('roles_confirmed', 'pending_payment', 'intake_submitted'):
-        candidate.status = 'paid'
+        if candidate.credentials.exists():
+            candidate.status = 'credential_completed'
+        else:
+            candidate.status = 'paid'
         candidate.save(update_fields=['status'])
 
     log_action(candidate.user, 'payment_verified', str(candidate_id), 'payment', {
@@ -389,7 +392,7 @@ def payments(request, candidate_id):
 @permission_classes([IsAdmin])
 def record_payment(request, candidate_id):
     data = request.data.copy()
-    data['candidate'] = candidate_id
+    data['candidate'] = str(candidate_id)
     serializer = PaymentSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     pay = serializer.save(recorded_by=request.user)
@@ -404,7 +407,10 @@ def record_payment(request, candidate_id):
         try:
             cand = Candidate.objects.get(id=candidate_id)
             if cand.status in ('roles_confirmed', 'pending_payment', 'past_due'):
-                cand.status = 'paid'
+                if cand.credentials.exists():
+                    cand.status = 'credential_completed'
+                else:
+                    cand.status = 'paid'
                 cand.save(update_fields=['status'])
         except Candidate.DoesNotExist:
             pass
